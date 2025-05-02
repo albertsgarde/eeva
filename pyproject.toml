@@ -8,4 +8,11 @@ dependencies = [
     "ipykernel>=6.29.5",
     "langchain>=0.3.24",
     "langchain-openai>=0.3.14",
+    "langgraph>=0.4.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.11.6",
 ]
