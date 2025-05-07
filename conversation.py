@@ -1,5 +1,6 @@
-from typing import Sequence
-from pydantic import BaseModel, Field
+from pathlib import Path
+from typing import Any, Sequence
+from pydantic import BaseModel, Field, model_validator
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain import chat_models
@@ -25,7 +26,34 @@ class Message(BaseModel):
 class Role(BaseModel):
     id: int = Field()
     system_message: str = Field()
-    model: BaseChatModel = Field()
+    model_name: str = Field()
+    model_provider: str = Field()
+    model: BaseChatModel = Field(exclude=True)
+
+    @staticmethod
+    def initialize(
+        id: int,
+        system_message: str,
+        model_name: str,
+        model_provider: str,
+    ) -> "Role":
+        return Role(
+            id=id,
+            system_message=system_message,
+            model_name=model_name,
+            model_provider=model_provider,
+            model=chat_models.init_chat_model(
+                model_name, model_provider=model_provider
+            ),
+        )
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_model(cls, data: Any) -> Any:
+        data["model"] = chat_models.init_chat_model(
+            data["model_name"], model_provider=data["model_provider"]
+        )
+        return data
 
     def create_history(self, messages: Sequence[Message]) -> Sequence[BaseMessage]:
         return [SystemMessage(content=self.system_message)] + [
@@ -76,15 +104,17 @@ class Conversation(BaseModel):
     def initialize(
         config: ConversationConfig,
     ) -> "Conversation":
-        role0 = Role(
+        role0 = Role.initialize(
             id=0,
             system_message=config.role0_system_prompt,
-            model=chat_models.init_chat_model("gpt-4o-mini", model_provider="openai"),
+            model_name="gpt-4o-mini",
+            model_provider="openai",
         )
-        role1 = Role(
+        role1 = Role.initialize(
             id=1,
             system_message=config.role1_system_prompt,
-            model=chat_models.init_chat_model("gpt-4o-mini", model_provider="openai"),
+            model_name="gpt-4o-mini",
+            model_provider="openai",
         )
         messages = [Message(role_id=0, content=config.role0_start_message)]
         return Conversation(
@@ -133,3 +163,13 @@ class Conversation(BaseModel):
             return response
         else:
             raise Exception("Multiple responses received")
+
+    def save_to_file(self, path: Path) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(self.model_dump_json())
+
+    @staticmethod
+    def load_from_file(path: Path) -> "Conversation":
+        with open(path, "r", encoding="utf-8") as f:
+            data = f.read()
+        return Conversation.model_validate_json(data)
