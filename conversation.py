@@ -42,6 +42,8 @@ class Role(BaseModel):
 
 
 class ConversationConfig:
+    role0_name: str
+    role1_name: str
     role0_system_prompt: str
     role1_system_prompt: str
     role0_start_message: str
@@ -51,7 +53,11 @@ class ConversationConfig:
         role0_system_prompt: str,
         role1_system_prompt: str,
         role0_start_message: str,
+        role0_name: str = "0",
+        role1_name: str = "1",
     ):
+        self.role0_name = role0_name
+        self.role1_name = role1_name
         self.role0_system_prompt = role0_system_prompt
         self.role1_system_prompt = role1_system_prompt
         self.role0_start_message = role0_start_message
@@ -63,6 +69,7 @@ class ConversationConfig:
 class Conversation(BaseModel):
     role0: Role = Field()
     role1: Role = Field()
+    role_names: dict[int, str] = Field()
     messages: list[Message] = Field()
 
     @staticmethod
@@ -80,7 +87,12 @@ class Conversation(BaseModel):
             model=chat_models.init_chat_model("gpt-4o-mini", model_provider="openai"),
         )
         messages = [Message(role_id=0, content=config.role0_start_message)]
-        return Conversation(role0=role0, role1=role1, messages=messages)
+        return Conversation(
+            role0=role0,
+            role1=role1,
+            role_names={0: config.role0_name, 1: config.role1_name},
+            messages=messages,
+        )
 
     def advance(self, num_steps: int = 1) -> "Conversation":
         for _ in range(num_steps):
@@ -95,14 +107,13 @@ class Conversation(BaseModel):
         return self.messages
 
     def print_messages(self) -> None:
+        max_name_length = max(len(name) for name in self.role_names.values())
         for message in self.messages:
-            print(f"{message.role_id}: {message.content}")
+            print(
+                f"{f'{self.role_names[message.role_id]}:':<{max_name_length + 1}} {message.content}"
+            )
 
-    def analyze(
-        self, role0_name: str, role1_name: str, system_prompt: str, prefix: str
-    ) -> str:
-        names = {0: role0_name, 1: role1_name}
-
+    def analyze(self, system_prompt: str, prefix: str) -> str:
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(
@@ -110,7 +121,7 @@ class Conversation(BaseModel):
                 + "\n"
                 + "\n".join(
                     [
-                        f"{names[message.role_id]}: {message.content}"
+                        f"{self.role_names[message.role_id]}: {message.content}"
                         for message in self.messages
                     ]
                 )
