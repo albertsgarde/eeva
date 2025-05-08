@@ -155,16 +155,34 @@ class Conversation(BaseModel):
                 f"{f'{self.role_names[message.role_id]}:':<{max_name_length + 1}} {message.content}"
             )
 
-    def analyze(self, system_prompt: str, prefix: str) -> ConversationAnalysis:
+    def analyze(self, analyzer: "Analyzer") -> ConversationAnalysis:
+        return analyzer.analyze(self)
+
+    def save_to_file(self, path: Path) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(self.model_dump_json())
+
+    @staticmethod
+    def load_from_file(path: Path) -> "Conversation":
+        with open(path, "r", encoding="utf-8") as f:
+            data = f.read()
+        return Conversation.model_validate_json(data)
+
+
+class Analyzer(BaseModel):
+    system_prompt: str = Field()
+    instruction: str = Field()
+
+    def analyze(self, conversation: Conversation) -> ConversationAnalysis:
         messages = [
-            SystemMessage(content=system_prompt),
+            SystemMessage(content=self.system_prompt),
             HumanMessage(
-                content=prefix
+                content=self.instruction
                 + "\n"
                 + "\n".join(
                     [
-                        f"{self.role_names[message.role_id]}: {message.content}"
-                        for message in self.messages
+                        f"{conversation.role_names[message.role_id]}: {message.content}"
+                        for message in conversation.messages
                     ]
                 )
             ),
@@ -176,13 +194,3 @@ class Conversation(BaseModel):
             ConversationAnalysis, model.invoke(messages)
         )
         return response
-
-    def save_to_file(self, path: Path) -> None:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(self.model_dump_json())
-
-    @staticmethod
-    def load_from_file(path: Path) -> "Conversation":
-        with open(path, "r", encoding="utf-8") as f:
-            data = f.read()
-        return Conversation.model_validate_json(data)
