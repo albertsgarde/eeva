@@ -2,6 +2,9 @@ import json
 import os
 from pathlib import Path
 
+from pydantic import BaseModel, Field
+from langchain import chat_models
+
 
 def load_secrets(path: str = "secrets.json"):
     secrets = json.load(open(path))
@@ -11,3 +14,13 @@ def load_secrets(path: str = "secrets.json"):
 
 def output_dir() -> Path:
     return Path("output")
+
+
+class Model(BaseModel):
+    model_name: str = Field()
+    model_provider: str = Field()
+
+    def init_chat_model(self):
+        return chat_models.init_chat_model(
+            self.model_name, model_provider=self.model_provider
+        )
