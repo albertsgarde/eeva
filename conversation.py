@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Any, Sequence
+import typing
+from typing_extensions import Any, Sequence
 from pydantic import BaseModel, Field, model_validator
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -94,6 +95,17 @@ class ConversationConfig:
         return Conversation.initialize(self)
 
 
+class ConversationAnalysis(BaseModel):
+    "Analysis of the conversation"
+
+    analysis: str = Field(
+        description="Analysis of how the conversation scores on the metric"
+    )
+    score: float = Field(
+        description="How the conversation scores on the metric from 0 to 1"
+    )
+
+
 class Conversation(BaseModel):
     role0: Role = Field()
     role1: Role = Field()
@@ -143,7 +155,7 @@ class Conversation(BaseModel):
                 f"{f'{self.role_names[message.role_id]}:':<{max_name_length + 1}} {message.content}"
             )
 
-    def analyze(self, system_prompt: str, prefix: str) -> str:
+    def analyze(self, system_prompt: str, prefix: str) -> ConversationAnalysis:
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(
@@ -157,12 +169,13 @@ class Conversation(BaseModel):
                 )
             ),
         ]
-        model = chat_models.init_chat_model("gpt-4o-mini", model_provider="openai")
-        response = model.invoke(messages).content
-        if isinstance(response, str):
-            return response
-        else:
-            raise Exception("Multiple responses received")
+        model = chat_models.init_chat_model(
+            "gpt-4o-mini", model_provider="openai"
+        ).with_structured_output(ConversationAnalysis)
+        response: ConversationAnalysis = typing.cast(
+            ConversationAnalysis, model.invoke(messages)
+        )
+        return response
 
     def save_to_file(self, path: Path) -> None:
         with open(path, "w", encoding="utf-8") as f:
