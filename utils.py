@@ -24,3 +24,16 @@ class Model(BaseModel):
         return chat_models.init_chat_model(
             self.model_name, model_provider=self.model_provider
         )
+
+
+class Prompts:
+    dir: Path
+
+    def __init__(self, dir: str | Path):
+        if isinstance(dir, str):
+            dir = Path(dir)
+        self.dir = dir
+
+    def get(self, prompt_name: str) -> str:
+        with open(self.dir / f"{prompt_name}.txt", "r") as file:
+            return file.read()

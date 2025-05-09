@@ -12,3 +12,6 @@ wheels/
 secrets.json
 
 output/
+prompts/**
+!prompts/default/
+!prompts/default/**
