@@ -72,6 +72,7 @@ class Interview(BaseModel):
             )
 
     def save_to_file(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write(self.model_dump_json())
 
