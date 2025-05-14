@@ -3,10 +3,8 @@ import { mkdir, writeFile } from 'fs/promises';
 import { dirname } from "path";
 
 export async function POST({
-	params,
 	request
 }: {
-	params: { api_slug: string };
 	request: Request;
 }) {
 	const { conversation_name, conversation }: {
