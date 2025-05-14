@@ -6,14 +6,14 @@ from pydantic import BaseModel, Field
 from langchain import chat_models
 
 
-def load_secrets(path: str = "secrets.json"):
+def load_secrets(path: str = "../secrets.json"):
     secrets = json.load(open(path))
     for key, value in secrets.items():
         os.environ[key] = value
 
 
 def output_dir() -> Path:
-    return Path("output")
+    return Path("../output")
 
 
 class Model(BaseModel):
