@@ -4,7 +4,7 @@ from typing_extensions import Sequence
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 
-from utils import Model
+from .utils import Model
 
 
 class Message(BaseModel):
