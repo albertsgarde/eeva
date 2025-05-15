@@ -1,2 +1,1 @@
-from .utils import *
-from .interview import *
+from . import utils, interview
