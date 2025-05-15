@@ -32,7 +32,7 @@
 	// Use a throwaway api key that only has access to $0.1 each month. Should obviously be done in a better way in future.
 	const client = new OpenAI({
 		apiKey:
-			'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',
+			'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',
 		dangerouslyAllowBrowser: true
 	});
 
@@ -102,7 +102,7 @@
 			})
 			.then(() => {
 				// Save the conversation
-				const conversationName = 'albert-test1';
+				const conversationName = 'albert-test2';
 				saveConversation(conversationName, messageFeed);
 			});
 	}
