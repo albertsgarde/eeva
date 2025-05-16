@@ -1,11 +1,22 @@
 import os
 from pathlib import Path
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
+from pydantic.alias_generators import to_camel
 
-from identity.utils import Prompts
+from identity.utils import Model, Prompts
+from identity.interview import Interview, Interviewer, Message
+from identity import utils
 
 app = FastAPI()
+
+secrets_path_str = os.getenv("SECRETS_PATH")
+if secrets_path_str is None:
+    raise ValueError("SECRETS_PATH environment variable is not set.")
+else:
+    secrets_path = Path(secrets_path_str).resolve()
+if not secrets_path.exists():
+    raise ValueError(f"Secrets file {secrets_path} does not exist.")
 
 output_dir_str = os.getenv("OUTPUT_DIR")
 if output_dir_str is None:
@@ -23,6 +34,78 @@ else:
 if not prompt_dir.exists():
     raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
+utils.load_secrets(secrets_path.__str__())
+
+INTERVIEW_DIR = output_dir / "interviews"
+
+
+class NetworkModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,  # snake_case → camelCase
+        populate_by_name=True,  # accept either name or alias on input
+        frozen=True,  # make immutable
+    )
+
+
+class InterviewId(NetworkModel):
+    id: int = Field()
+
+
+class CreateInterviewRequest(NetworkModel):
+    interviewer_system_prompt_id: str = Field()
+    start_message_id: str = Field()
+
+
+class CreateInterviewResponse(NetworkModel):
+    interview_id: InterviewId = Field()
+    messages: list[Message] = Field()
+
+
+class InterviewStore(BaseModel):
+    interviews: dict[InterviewId, Interview] = Field()
+    next_id: int = Field()
+
+    @staticmethod
+    def initialize() -> "InterviewStore":
+        prev_ids = [
+            file.name.removesuffix(".json")
+            for file in INTERVIEW_DIR.iterdir()
+            if file.name.removesuffix(".json").isnumeric()
+        ]
+        prev_max_id = -1 if not prev_ids else max(map(int, prev_ids))
+        return InterviewStore(
+            interviews={},
+            next_id=prev_max_id + 1,
+        )
+
+    def _next_id(self) -> InterviewId:
+        self.next_id += 1
+        return InterviewId(id=self.next_id)
+
+    def create_interview(
+        self, create_interview_request: CreateInterviewRequest
+    ) -> CreateInterviewResponse:
+        initial_message = prompts.get(create_interview_request.start_message_id)
+        model = Model(
+            model_name="gpt-4o-mini",
+            model_provider="openai",
+        )
+        interviewer = Interviewer(
+            system_prompt=prompts.get(
+                create_interview_request.interviewer_system_prompt_id
+            ),
+            model=model,
+        )
+        interview = Interview.initialize(interviewer, initial_message)
+        interview_id = self._next_id()
+        self.interviews[interview_id] = interview
+        return CreateInterviewResponse(
+            interview_id=interview_id, messages=interview.messages
+        )
+
+
+interview_store = InterviewStore.initialize()
+
 prompts = Prompts(dir=prompt_dir)
 
 
@@ -36,18 +119,35 @@ def get_prompt(id: str) -> str:
     return prompts.get(id)
 
 
-class Message(BaseModel):
-    host: bool
-    name: str
+@app.post("/api/interview")
+def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
+    return interview_store.create_interview(request)
 
 
-class AddConversationRequest(BaseModel):
-    conversation_name: str
-    conversation: list[Message]
+class GetResponseRequest(BaseModel):
+    message: str = Field()
+
+
+@app.post("/api/interview/{interview_id}/respond")
+def respond_to_interview(
+    interview_id: int, request: GetResponseRequest
+) -> list[Message]:
+    """
+    Respond to an interview with a message.
+    """
+    interview = interview_store.interviews[InterviewId(id=interview_id)]
+    interview.respond(request.message)
+    interview.save_to_file(output_dir / "interviews" / f"{interview_id}.json")
+    return interview.messages
+
+
+class SaveConversationRequest(BaseModel):
+    conversation_name: str = Field()
+    conversation: list[Message] = Field()
 
 
 @app.post("/api/save_conversation")
-def save_conversation(request: AddConversationRequest) -> None:
+def save_conversation(request: SaveConversationRequest) -> None:
     """
     Save the conversation to a file.
     """

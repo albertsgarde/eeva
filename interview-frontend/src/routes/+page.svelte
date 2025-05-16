@@ -1,120 +1,58 @@
 <script lang="ts">
 	import IconSend from '@lucide/svelte/icons/send-horizontal';
-	import { OpenAI } from 'openai';
+	import type { InterviewId, Message } from './+page';
 
-	export let data: {
-		startMessage: string;
-		interviewerPrompt: string;
-	};
+	export let data: { interviewId: InterviewId; messages: Message[] };
 
-	interface Message {
-		host: boolean;
-		name: string;
-		message: string;
-		color: string;
-	}
+	let { interviewId, messages: cur_messages } = data;
 
 	let elemChat: HTMLElement;
 
-	// Messages
-	let messageFeed: Message[] = [
-		{
-			host: false,
-			name: 'Interviewer',
-			message: data.startMessage,
-			color: 'preset-tonal-primary'
-		}
-	];
 	let currentMessage = '';
-
-	let previousResponseId: string | null = null;
-
-	// Use a throwaway api key that only has access to $0.1 each month. Should obviously be done in a better way in future.
-	const client = new OpenAI({
-		apiKey:
-			'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',
-		dangerouslyAllowBrowser: true
-	});
 
 	function scrollChatBottom(behavior?: 'auto' | 'instant' | 'smooth') {
 		elemChat.scrollTo({ top: elemChat.scrollHeight, behavior });
 	}
 
-	async function getResponse(
-		userMessage: string,
-		previousResponseId: string | null
-	): Promise<{ message: string; id: string }> {
-		const response = await client.responses
-			.create({
-				model: 'gpt-4o-mini',
-				input: [
-					{
-						role: 'developer',
-						content: data.interviewerPrompt
-					},
-					{
-						role: 'user',
-						content: userMessage
-					}
-				],
-				previous_response_id: previousResponseId
+	async function getResponse(userMessage: string): Promise<Message[]> {
+		const url = `/api/interview/${data.interviewId.id}/respond`;
+		const messages = await fetch(url, {
+			method: `POST`,
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				message: userMessage
 			})
-			.then((response) => {
-				const responseId = response.id;
-				const message = response.output_text;
-
-				return { message, id: responseId };
-			});
-		return response;
+		}).then(async (response) => {
+			if (!response.ok) {
+				throw new Error('Network response was not ok: ' + (await response.text()));
+			}
+			return response.json();
+		});
+		return messages;
 	}
 
 	function addMessage() {
 		if (!currentMessage) return;
-		const userMessage = currentMessage;
+		const userMessageText = currentMessage;
 		currentMessage = '';
 
-		const newMessage = {
-			host: true,
-			name: 'User',
-			message: userMessage,
-			color: 'preset-tonal-primary'
+		const userMessage = {
+			interviewer: false,
+			content: userMessageText
 		};
 		// Update the message feed
-		messageFeed = [...messageFeed, newMessage];
+		cur_messages = [...cur_messages, userMessage];
 
 		// Smooth scroll to bottom
 		// Timeout prevents race condition
 		setTimeout(() => scrollChatBottom('smooth'), 0);
 
-		getResponse(userMessage, previousResponseId)
-			.then(({ message, id }) => {
-				previousResponseId = id;
-				const newMessage = {
-					host: false,
-					name: 'You',
-					message: message,
-					color: 'preset-tonal-secondary'
-				};
-				// Update the message feed
-				messageFeed = [...messageFeed, newMessage];
+		getResponse(userMessageText).then((messages) => {
+			cur_messages = messages;
 
-				setTimeout(() => scrollChatBottom('smooth'), 0);
-			})
-			.then(() => {
-				// Save the conversation
-				const conversationName = 'albert-test2';
-				saveConversation(conversationName, messageFeed);
-			});
-	}
-
-	async function saveConversation(conversation_name: string, conversation: Message[]) {
-		const url = `/api/save_conversation`;
-		await fetch(url, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ conversation_name: conversation_name, conversation: conversation })
+			setTimeout(() => scrollChatBottom('smooth'), 0);
 		});
 	}
 
@@ -136,23 +74,19 @@
 		</div>
 		<!-- Chat Messages Container -->
 		<div bind:this={elemChat} class="flex-1 space-y-4 overflow-y-auto p-4">
-			{#each messageFeed as bubble}
-				{#if bubble.host === true}
+			{#each cur_messages as message}
+				{#if message.interviewer === false}
 					<div class="flex flex-col items-end">
-						<span class="text-xs text-gray-500">
-							{bubble.name}
-						</span>
+						<span class="text-xs text-gray-500"> You </span>
 						<div class="max-w-xl self-end rounded-lg rounded-tr-none bg-blue-500 p-3 text-white">
-							{bubble.message}
+							{message.content}
 						</div>
 					</div>
 				{:else}
 					<div class="flex flex-col">
-						<span class="text-xs text-gray-500">
-							{bubble.name}
-						</span>
+						<span class="text-xs text-gray-500"> Interviewer </span>
 						<div class="max-w-xl self-start rounded-lg rounded-tl-none bg-gray-200 p-3">
-							{bubble.message}
+							{message.content}
 						</div>
 					</div>
 				{/if}
