@@ -1,0 +1,27 @@
+---
+services:
+    backend:
+        container_name: identity-backend
+        pull_policy: build
+        build:
+            context: ..
+            dockerfile: docker/backend.dockerfile
+        image: identity-backend
+        ports:
+            - 8000:8000
+    frontend:
+        container_name: identity-frontend
+        pull_policy: build
+        build:
+            context: ..
+            dockerfile: docker/frontend.dockerfile
+            target: frontend-prod
+        image: identity-frontend
+        ports:
+            - 3000:3000
+        environment:
+            - BACKEND_ORIGIN=http://backend:8000
+
+networks:
+    app-network:
+        driver: bridge
