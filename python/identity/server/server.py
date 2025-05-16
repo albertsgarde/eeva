@@ -34,7 +34,7 @@ else:
 if not prompt_dir.exists():
     raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
-utils.load_secrets(secrets_path.__str__())
+utils.load_secrets(secrets_path)
 
 INTERVIEW_DIR = output_dir / "interviews"
 

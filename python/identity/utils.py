@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from langchain import chat_models
 
 
-def load_secrets(path: str):
+def load_secrets(path: str | Path):
     secrets = json.load(open(path))
     for key, value in secrets.items():
         os.environ[key] = value
