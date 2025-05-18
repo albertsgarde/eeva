@@ -1,0 +1,28 @@
+---
+steps:
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['compose', '-f', 'docker/compose.yaml', 'build']
+      env:
+          - 'DB_DIR=database.db'
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['tag', 'eeva-frontend', 'gcr.io/eeva-460211/eeva-frontend']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['tag', 'eeva-backend', 'gcr.io/eeva-460211/eeva-backend']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/eeva-460211/eeva-frontend']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/eeva-460211/eeva-backend']
+    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: 'gcloud'
+      args: ['run', 'deploy', 'eeva-cd', '--region=europe-west4', '--service-account=cd-builder@eeva-460211.iam.gserviceaccount.com',
+          '--add-volume=name=database,type=cloud-storage,bucket=eeva-database',
+          '--container=eeva-frontend', '--image=gcr.io/eeva-460211/eeva-frontend', '--port=3000',
+            '--set-env-vars=BACKEND_ORIGIN=http://localhost:8000',
+            '--depends-on=eeva-backend',
+          '--container=eeva-backend', '--image=gcr.io/eeva-460211/eeva-backend',
+            '--set-env-vars=DATABASE_PATH=/database/data.db',
+            '--add-volume-mount=volume=database,mount-path=/database']
+logsBucket: 'gs://eeva-logs'
+serviceAccount: 'projects/eeva-460211/serviceAccounts/cd-builder@eeva-460211.iam.gserviceaccount.com'
+options:
+    logging: 'GCS_ONLY'
