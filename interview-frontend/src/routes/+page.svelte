@@ -70,7 +70,7 @@
 	<div class="h-256 flex w-full max-w-screen-xl flex-col rounded-lg bg-white shadow-md">
 		<!-- Chat Header -->
 		<div class="rounded-t-lg bg-blue-600 p-4 text-white">
-			<h1 class="text-xl font-bold">Identity</h1>
+			<h1 class="text-xl font-bold">Eeva</h1>
 		</div>
 		<!-- Chat Messages Container -->
 		<div bind:this={elemChat} class="flex-1 space-y-4 overflow-y-auto p-4">

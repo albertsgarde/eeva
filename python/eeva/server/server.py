@@ -4,9 +4,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from identity.utils import Model, Prompts
-from identity.interview import Interview, Interviewer, Message
-from identity import utils
+from eeva.utils import Model, Prompts
+from eeva.interview import Interview, Interviewer, Message
+from eeva import utils
 
 app = FastAPI()
 

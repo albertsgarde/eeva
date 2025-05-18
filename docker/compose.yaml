@@ -1,22 +1,22 @@
 ---
 services:
     backend:
-        container_name: identity-backend
+        container_name: eeva-backend
         pull_policy: build
         build:
             context: ..
             dockerfile: docker/backend.dockerfile
-        image: identity-backend
+        image: eeva-backend
         ports:
             - 8000:8000
     frontend:
-        container_name: identity-frontend
+        container_name: eeva-frontend
         pull_policy: build
         build:
             context: ..
             dockerfile: docker/frontend.dockerfile
             target: frontend-prod
-        image: identity-frontend
+        image: eeva-frontend
         ports:
             - 3000:3000
         environment:

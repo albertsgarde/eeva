@@ -260,7 +260,7 @@ wheels = [
 ]
 
 [[package]]
-name = "identity"
+name = "eeva"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
