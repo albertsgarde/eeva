@@ -7,6 +7,8 @@ services:
             context: ..
             dockerfile: docker/backend.dockerfile
         image: eeva-backend
+        volumes:
+            - ../${OUTPUT_DIR?output dir}:/output/
         ports:
             - 8000:8000
     frontend:
