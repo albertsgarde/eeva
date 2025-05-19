@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from eeva import utils
 from eeva.interview import Interview, Interviewer, Message
 from eeva.utils import Model, Prompts
 
@@ -75,14 +74,6 @@ class InterviewStore(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI()
 
-    secrets_path_str = os.getenv("SECRETS_PATH")
-    if secrets_path_str is None:
-        raise ValueError("SECRETS_PATH environment variable is not set.")
-    else:
-        secrets_path = Path(secrets_path_str).resolve()
-    if not secrets_path.exists():
-        raise ValueError(f"Secrets file {secrets_path} does not exist.")
-
     output_dir_str = os.getenv("OUTPUT_DIR")
     if output_dir_str is None:
         raise ValueError("OUTPUT_DIR environment variable is not set.")
@@ -99,13 +90,18 @@ def create_app() -> FastAPI:
     if not prompt_dir.exists():
         raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
-    utils.load_secrets(secrets_path)
-
     interview_dir = output_dir / "interviews"
 
     interview_store = InterviewStore.initialize(interview_dir)
 
     prompts = Prompts(dir=prompt_dir)
+
+    @app.get("/ready")
+    def ready() -> str:
+        """
+        Health check endpoint.
+        """
+        return "OK"
 
     @app.get("/api/prompt")
     def get_prompt(id: str) -> str:

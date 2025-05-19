@@ -11,9 +11,10 @@ def main():
         default="127.0.0.1",
         help="Host to bind the server to",
     )
+    parser.add_argument("--reload", action="store_true", default=False)
     args = parser.parse_args()
 
-    uvicorn.run("eeva.app:app", reload=True, host=args.host)
+    uvicorn.run("eeva.app:app", reload=args.reload, host=args.host)
 
 
 if __name__ == "__main__":

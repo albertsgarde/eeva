@@ -16,13 +16,11 @@ RUN uv sync --locked --no-install-project --no-dev
 
 RUN uv sync --locked --no-dev
 
-COPY secrets.json /secrets.json
-
 # Place executables in the environment at the front of the path
 ENV PATH="/eeva/.venv/bin:$PATH"
-ENV SECRETS_PATH="/secrets.json"
 ENV OUTPUT_DIR="/output"
 ENV PROMPT_DIR="/prompts"
+ENV OPENAI_API_KEY=""
 
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
