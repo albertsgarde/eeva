@@ -2,10 +2,6 @@ import argparse
 
 import uvicorn
 
-from . import server
-
-app = server.create_app()
-
 
 def main():
     parser = argparse.ArgumentParser(description="Eeva backend")
@@ -17,7 +13,7 @@ def main():
     )
     args = parser.parse_args()
 
-    uvicorn.run("eeva.main:app", reload=True, host=args.host)
+    uvicorn.run("eeva.app:app", reload=True, host=args.host)
 
 
 if __name__ == "__main__":
