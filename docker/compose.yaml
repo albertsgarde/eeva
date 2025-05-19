@@ -8,6 +8,7 @@ services:
             dockerfile: docker/backend.dockerfile
         image: eeva-backend
         volumes:
+            - ../${PROMPT_DIR?prompt dir}:/prompts/
             - ../${OUTPUT_DIR?output dir}:/output/
         ports:
             - 8000:8000

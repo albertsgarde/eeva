@@ -16,8 +16,6 @@ RUN uv sync --locked --no-install-project --no-dev
 
 RUN uv sync --locked --no-dev
 
-COPY prompts /prompts
-
 COPY secrets.json /secrets.json
 
 # Place executables in the environment at the front of the path
