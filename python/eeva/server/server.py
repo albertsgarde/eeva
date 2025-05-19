@@ -38,6 +38,7 @@ class InterviewStore(BaseModel):
 
     @staticmethod
     def initialize(interview_dir: Path) -> "InterviewStore":
+        interview_dir.mkdir(parents=True, exist_ok=True)
         prev_ids = [
             file.name.removesuffix(".json")
             for file in interview_dir.iterdir()
@@ -62,17 +63,13 @@ class InterviewStore(BaseModel):
             model_provider="openai",
         )
         interviewer = Interviewer(
-            system_prompt=prompts.get(
-                create_interview_request.interviewer_system_prompt_id
-            ),
+            system_prompt=prompts.get(create_interview_request.interviewer_system_prompt_id),
             model=model,
         )
         interview = Interview.initialize(interviewer, initial_message)
         interview_id = self._next_id()
         self.interviews[interview_id] = interview
-        return CreateInterviewResponse(
-            interview_id=interview_id, messages=interview.messages
-        )
+        return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
 
 
 def create_app() -> FastAPI:
@@ -127,9 +124,7 @@ def create_app() -> FastAPI:
         message: str = Field()
 
     @app.post("/api/interview/{interview_id}/respond")
-    def respond_to_interview(
-        interview_id: int, request: GetResponseRequest
-    ) -> list[Message]:
+    def respond_to_interview(interview_id: int, request: GetResponseRequest) -> list[Message]:
         """
         Respond to an interview with a message.
         """

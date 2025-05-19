@@ -21,7 +21,6 @@ COPY prompts /prompts
 COPY secrets.json /secrets.json
 
 RUN mkdir /output
-RUN mkdir /output/interviews
 
 # Place executables in the environment at the front of the path
 ENV PATH="/eeva/.venv/bin:$PATH"
