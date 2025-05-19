@@ -10,6 +10,7 @@ dependencies = [
     "langchain>=0.3.24",
     "langchain-openai>=0.3.14",
     "langgraph>=0.4.0",
+    "pydantic>=2.11.3",
     "uvicorn[standard]>=0.34.2",
 ]
 
@@ -23,3 +24,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
+
+[tool.ruff.lint]
+ignore = ["D203", "D213", "F722"]
+select = ["I", "E", "F", "W", "N", "B"]
+isort.known-first-party = ["eeva"]

@@ -1,42 +1,13 @@
 import os
 from pathlib import Path
+
 from fastapi import FastAPI
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from eeva.utils import Model, Prompts
-from eeva.interview import Interview, Interviewer, Message
 from eeva import utils
-
-app = FastAPI()
-
-secrets_path_str = os.getenv("SECRETS_PATH")
-if secrets_path_str is None:
-    raise ValueError("SECRETS_PATH environment variable is not set.")
-else:
-    secrets_path = Path(secrets_path_str).resolve()
-if not secrets_path.exists():
-    raise ValueError(f"Secrets file {secrets_path} does not exist.")
-
-output_dir_str = os.getenv("OUTPUT_DIR")
-if output_dir_str is None:
-    raise ValueError("OUTPUT_DIR environment variable is not set.")
-else:
-    output_dir = Path(output_dir_str).resolve()
-if not output_dir.exists():
-    raise ValueError(f"Output directory {output_dir} does not exist.")
-
-prompt_dir_str = os.getenv("PROMPT_DIR")
-if prompt_dir_str is None:
-    raise ValueError("PROMPT_DIR environment variable is not set.")
-else:
-    prompt_dir = Path(prompt_dir_str).resolve()
-if not prompt_dir.exists():
-    raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
-
-utils.load_secrets(secrets_path)
-
-INTERVIEW_DIR = output_dir / "interviews"
+from eeva.interview import Interview, Interviewer, Message
+from eeva.utils import Model, Prompts
 
 
 class NetworkModel(BaseModel):
@@ -66,10 +37,10 @@ class InterviewStore(BaseModel):
     next_id: int = Field()
 
     @staticmethod
-    def initialize() -> "InterviewStore":
+    def initialize(interview_dir: Path) -> "InterviewStore":
         prev_ids = [
             file.name.removesuffix(".json")
-            for file in INTERVIEW_DIR.iterdir()
+            for file in interview_dir.iterdir()
             if file.name.removesuffix(".json").isnumeric()
         ]
         prev_max_id = -1 if not prev_ids else max(map(int, prev_ids))
@@ -83,7 +54,7 @@ class InterviewStore(BaseModel):
         return InterviewId(id=self.next_id)
 
     def create_interview(
-        self, create_interview_request: CreateInterviewRequest
+        self, create_interview_request: CreateInterviewRequest, prompts: Prompts
     ) -> CreateInterviewResponse:
         initial_message = prompts.get(create_interview_request.start_message_id)
         model = Model(
@@ -104,55 +75,82 @@ class InterviewStore(BaseModel):
         )
 
 
-interview_store = InterviewStore.initialize()
+def create_app() -> FastAPI:
+    app = FastAPI()
 
-prompts = Prompts(dir=prompt_dir)
+    secrets_path_str = os.getenv("SECRETS_PATH")
+    if secrets_path_str is None:
+        raise ValueError("SECRETS_PATH environment variable is not set.")
+    else:
+        secrets_path = Path(secrets_path_str).resolve()
+    if not secrets_path.exists():
+        raise ValueError(f"Secrets file {secrets_path} does not exist.")
 
+    output_dir_str = os.getenv("OUTPUT_DIR")
+    if output_dir_str is None:
+        raise ValueError("OUTPUT_DIR environment variable is not set.")
+    else:
+        output_dir = Path(output_dir_str).resolve()
+    if not output_dir.exists():
+        raise ValueError(f"Output directory {output_dir} does not exist.")
 
-@app.get("/api/prompt")
-def get_prompt(id: str) -> str:
-    """
-    Get a prompt by its ID.
-    """
-    print(f"Fetching prompt with ID: {id}")
+    prompt_dir_str = os.getenv("PROMPT_DIR")
+    if prompt_dir_str is None:
+        raise ValueError("PROMPT_DIR environment variable is not set.")
+    else:
+        prompt_dir = Path(prompt_dir_str).resolve()
+    if not prompt_dir.exists():
+        raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
-    return prompts.get(id)
+    utils.load_secrets(secrets_path)
 
+    interview_dir = output_dir / "interviews"
 
-@app.post("/api/interview")
-def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
-    return interview_store.create_interview(request)
+    interview_store = InterviewStore.initialize(interview_dir)
 
+    prompts = Prompts(dir=prompt_dir)
 
-class GetResponseRequest(BaseModel):
-    message: str = Field()
+    @app.get("/api/prompt")
+    def get_prompt(id: str) -> str:
+        """
+        Get a prompt by its ID.
+        """
+        print(f"Fetching prompt with ID: {id}")
 
+        return prompts.get(id)
 
-@app.post("/api/interview/{interview_id}/respond")
-def respond_to_interview(
-    interview_id: int, request: GetResponseRequest
-) -> list[Message]:
-    """
-    Respond to an interview with a message.
-    """
-    interview = interview_store.interviews[InterviewId(id=interview_id)]
-    interview.respond(request.message)
-    interview.save_to_file(output_dir / "interviews" / f"{interview_id}.json")
-    return interview.messages
+    @app.post("/api/interview")
+    def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
+        return interview_store.create_interview(request, prompts)
 
+    class GetResponseRequest(BaseModel):
+        message: str = Field()
 
-class SaveConversationRequest(BaseModel):
-    conversation_name: str = Field()
-    conversation: list[Message] = Field()
+    @app.post("/api/interview/{interview_id}/respond")
+    def respond_to_interview(
+        interview_id: int, request: GetResponseRequest
+    ) -> list[Message]:
+        """
+        Respond to an interview with a message.
+        """
+        interview = interview_store.interviews[InterviewId(id=interview_id)]
+        interview.respond(request.message)
+        interview.save_to_file(output_dir / "interviews" / f"{interview_id}.json")
+        return interview.messages
 
+    class SaveConversationRequest(BaseModel):
+        conversation_name: str = Field()
+        conversation: list[Message] = Field()
 
-@app.post("/api/save_conversation")
-def save_conversation(request: SaveConversationRequest) -> None:
-    """
-    Save the conversation to a file.
-    """
-    file_path = output_dir / "interviews" / (request.conversation_name + ".json")
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(file_path, "w") as file:
-        file.write(request.model_dump_json())
-    return None
+    @app.post("/api/save_conversation")
+    def save_conversation(request: SaveConversationRequest) -> None:
+        """
+        Save the conversation to a file.
+        """
+        file_path = output_dir / "interviews" / (request.conversation_name + ".json")
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "w") as file:
+            file.write(request.model_dump_json())
+        return None
+
+    return app
