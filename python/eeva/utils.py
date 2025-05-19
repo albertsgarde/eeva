@@ -2,8 +2,8 @@ import json
 import os
 from pathlib import Path
 
-from pydantic import BaseModel, Field
 from langchain import chat_models
+from pydantic import BaseModel, Field
 
 
 def load_secrets(path: str | Path):

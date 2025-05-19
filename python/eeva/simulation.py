@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing_extensions import Sequence
-from pydantic import BaseModel, Field
+
 from langchain_core.messages import SystemMessage
+from pydantic import BaseModel, Field
+from typing_extensions import Sequence
 
 from .interview import Analyst, Interview, InterviewAnalysis, Interviewer, Message
 from .utils import Model
