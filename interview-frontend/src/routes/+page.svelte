@@ -22,7 +22,7 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				message: userMessage
+				user_message: userMessage
 			})
 		}).then(async (response) => {
 			if (!response.ok) {

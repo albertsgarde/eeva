@@ -8,6 +8,8 @@ from pydantic.alias_generators import to_camel
 from eeva.interview import Interview, Interviewer, Message
 from eeva.utils import Model, Prompts
 
+from .database import Database
+
 
 class NetworkModel(BaseModel):
     model_config = ConfigDict(
@@ -31,56 +33,8 @@ class CreateInterviewResponse(NetworkModel):
     messages: list[Message] = Field()
 
 
-class InterviewStore(BaseModel):
-    interviews: dict[InterviewId, Interview] = Field()
-    next_id: int = Field()
-
-    @staticmethod
-    def initialize(interview_dir: Path) -> "InterviewStore":
-        interview_dir.mkdir(parents=True, exist_ok=True)
-        prev_ids = [
-            file.name.removesuffix(".json")
-            for file in interview_dir.iterdir()
-            if file.name.removesuffix(".json").isnumeric()
-        ]
-        prev_max_id = -1 if not prev_ids else max(map(int, prev_ids))
-        return InterviewStore(
-            interviews={},
-            next_id=prev_max_id + 1,
-        )
-
-    def _next_id(self) -> InterviewId:
-        self.next_id += 1
-        return InterviewId(id=self.next_id)
-
-    def create_interview(
-        self, create_interview_request: CreateInterviewRequest, prompts: Prompts
-    ) -> CreateInterviewResponse:
-        initial_message = prompts.get(create_interview_request.start_message_id)
-        model = Model(
-            model_name="gpt-4o-mini",
-            model_provider="openai",
-        )
-        interviewer = Interviewer(
-            system_prompt=prompts.get(create_interview_request.interviewer_system_prompt_id),
-            model=model,
-        )
-        interview = Interview.initialize(interviewer, initial_message)
-        interview_id = self._next_id()
-        self.interviews[interview_id] = interview
-        return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
-
-
 def create_app() -> FastAPI:
     app = FastAPI()
-
-    output_dir_str = os.getenv("OUTPUT_DIR")
-    if output_dir_str is None:
-        raise ValueError("OUTPUT_DIR environment variable is not set.")
-    else:
-        output_dir = Path(output_dir_str).resolve()
-    if not output_dir.exists():
-        raise ValueError(f"Output directory {output_dir} does not exist.")
 
     prompt_dir_str = os.getenv("PROMPT_DIR")
     if prompt_dir_str is None:
@@ -90,9 +44,13 @@ def create_app() -> FastAPI:
     if not prompt_dir.exists():
         raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
-    interview_dir = output_dir / "interviews"
+    database_path_str = os.getenv("DATABASE_PATH")
+    if database_path_str is None:
+        raise ValueError("DATABASE_PATH environment variable is not set.")
+    else:
+        database_path = Path(database_path_str).resolve()
 
-    interview_store = InterviewStore.initialize(interview_dir)
+    database = Database(database_path)
 
     prompts = Prompts(dir=prompt_dir)
 
@@ -114,34 +72,31 @@ def create_app() -> FastAPI:
 
     @app.post("/api/interview")
     def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
-        return interview_store.create_interview(request, prompts)
+        initial_message = prompts.get(request.start_message_id)
+        model = Model(
+            model_name="gpt-4o-mini",
+            model_provider="openai",
+        )
+        interviewer = Interviewer(
+            system_prompt=prompts.get(request.interviewer_system_prompt_id),
+            model=model,
+        )
+        interview = Interview.initialize(interviewer, initial_message)
+        interview_id = InterviewId(id=database.interviews().create(interview))
+        return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
 
     class GetResponseRequest(BaseModel):
-        message: str = Field()
+        user_message: str = Field()
 
     @app.post("/api/interview/{interview_id}/respond")
     def respond_to_interview(interview_id: int, request: GetResponseRequest) -> list[Message]:
         """
         Respond to an interview with a message.
         """
-        interview = interview_store.interviews[InterviewId(id=interview_id)]
-        interview.respond(request.message)
-        interview.save_to_file(output_dir / "interviews" / f"{interview_id}.json")
+        interview_store = database.interviews()
+        interview = interview_store.get(interview_id)
+        interview.respond(request.user_message)
+        interview_store.update(interview_id, interview)
         return interview.messages
-
-    class SaveConversationRequest(BaseModel):
-        conversation_name: str = Field()
-        conversation: list[Message] = Field()
-
-    @app.post("/api/save_conversation")
-    def save_conversation(request: SaveConversationRequest) -> None:
-        """
-        Save the conversation to a file.
-        """
-        file_path = output_dir / "interviews" / (request.conversation_name + ".json")
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "w") as file:
-            file.write(request.model_dump_json())
-        return None
 
     return app
