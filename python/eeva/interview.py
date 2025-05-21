@@ -34,12 +34,14 @@ class Interviewer(BaseModel):
 class Interview(BaseModel):
     interviewer: Interviewer = Field()
     messages: list[Message] = Field()
+    subject_name: str = Field()
 
     @staticmethod
-    def initialize(interviewer: Interviewer, initial_message: str) -> "Interview":
+    def initialize(interviewer: Interviewer, initial_message: str, subject_name: str) -> "Interview":
         return Interview(
             interviewer=interviewer,
             messages=[Message(interviewer=True, content=initial_message)],
+            subject_name=subject_name,
         )
 
     def respond(self, subject_message: str) -> Message:
@@ -48,8 +50,8 @@ class Interview(BaseModel):
         self.messages.append(response)
         return response
 
-    def pretty_format(self, subject_name: str) -> str:
-        role_names = {True: "Interviewer", False: subject_name}
+    def pretty_format(self) -> str:
+        role_names = {True: "Interviewer", False: self.subject_name}
         max_name_length = max(len(name) for name in role_names.values())
         return "\n".join(
             [
@@ -73,12 +75,8 @@ class Interview(BaseModel):
 class InterviewAnalysis(BaseModel):
     "Analysis of the interview"
 
-    analysis: str = Field(
-        description="Analysis of how the interview scores on the metric"
-    )
-    score: float = Field(
-        description="How the interview scores on the metric from 0 to 1"
-    )
+    analysis: str = Field(description="Analysis of how the interview scores on the metric")
+    score: float = Field(description="How the interview scores on the metric from 0 to 1")
 
     def pretty_format(self) -> str:
         return f"Score: {self.score:.2f}\nAnalysis: {self.analysis}"
@@ -89,15 +87,11 @@ class Analyst(BaseModel):
     instruction: str = Field()
     model: Model = Field()
 
-    def analyze(self, interview: Interview, subject_name: str) -> InterviewAnalysis:
+    def analyze(self, interview: Interview) -> InterviewAnalysis:
         messages = [
             SystemMessage(content=self.system_prompt),
-            HumanMessage(
-                content=self.instruction + "\n" + interview.pretty_format(subject_name)
-            ),
+            HumanMessage(content=self.instruction + "\n" + interview.pretty_format()),
         ]
         model = self.model.init_chat_model().with_structured_output(InterviewAnalysis)
-        response: InterviewAnalysis = typing.cast(
-            InterviewAnalysis, model.invoke(messages)
-        )
+        response: InterviewAnalysis = typing.cast(InterviewAnalysis, model.invoke(messages))
         return response

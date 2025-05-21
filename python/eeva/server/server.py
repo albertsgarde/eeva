@@ -26,6 +26,7 @@ class InterviewId(NetworkModel):
 class CreateInterviewRequest(NetworkModel):
     interviewer_system_prompt_id: str = Field()
     start_message_id: str = Field()
+    subject_name: str = Field()
 
 
 class CreateInterviewResponse(NetworkModel):
@@ -81,7 +82,7 @@ def create_app() -> FastAPI:
             system_prompt=prompts.get(request.interviewer_system_prompt_id),
             model=model,
         )
-        interview = Interview.initialize(interviewer, initial_message)
+        interview = Interview.initialize(interviewer, initial_message, request.subject_name)
         interview_id = InterviewId(id=database.interviews().create(interview))
         return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
 

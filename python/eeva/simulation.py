@@ -29,10 +29,8 @@ class InterviewSimulation(BaseModel):
     character: Character = Field()
 
     @staticmethod
-    def initialize(
-        interviewer: Interviewer, character: Character
-    ) -> "InterviewSimulation":
-        interview = Interview(interviewer=interviewer, messages=[])
+    def initialize(interviewer: Interviewer, character: Character) -> "InterviewSimulation":
+        interview = Interview(interviewer=interviewer, messages=[], subject_name=character.name)
         return InterviewSimulation(interview=interview, character=character)
 
     def advance(self, num_steps: int = 1) -> None:
@@ -41,10 +39,10 @@ class InterviewSimulation(BaseModel):
             self.interview.respond(character_message)
 
     def analyze(self, analyzer: Analyst) -> InterviewAnalysis:
-        return analyzer.analyze(self.interview, self.character.name)
+        return analyzer.analyze(self.interview)
 
     def print_messages(self) -> None:
-        print(self.interview.pretty_format(self.character.name))
+        print(self.interview.pretty_format())
 
     def save_to_file(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
