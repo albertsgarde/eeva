@@ -37,6 +37,12 @@ class Table(Generic[T]):
             raise ValueError(f"{self.table_name.capitalize()} with id {id} not found.")
         return self.from_json(row[0])
 
+    def get_all(self) -> list[T]:
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT {self.table_name} FROM {self.table_name}")
+        rows = cursor.fetchall()
+        return [self.from_json(row[0]) for row in rows]
+
     def create(self, item: T) -> int:
         cursor = self.connection.cursor()
         cursor.execute(

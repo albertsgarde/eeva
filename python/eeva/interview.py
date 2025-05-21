@@ -5,10 +5,10 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 from typing_extensions import Sequence
 
-from .utils import Model
+from .utils import Model, NetworkModel
 
 
-class Message(BaseModel):
+class Message(NetworkModel):
     interviewer: bool = Field()
     content: str = Field()
 
@@ -16,7 +16,7 @@ class Message(BaseModel):
         return HumanMessage(content=self.content)
 
 
-class Interviewer(BaseModel):
+class Interviewer(NetworkModel):
     system_prompt: str = Field()
     model: Model = Field()
 
@@ -31,7 +31,7 @@ class Interviewer(BaseModel):
         return Message(interviewer=True, content=response.content)
 
 
-class Interview(BaseModel):
+class Interview(NetworkModel):
     interviewer: Interviewer = Field()
     messages: list[Message] = Field()
     subject_name: str = Field()

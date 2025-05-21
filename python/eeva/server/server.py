@@ -2,21 +2,12 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel, Field
 
 from eeva.interview import Interview, Interviewer, Message
-from eeva.utils import Model, Prompts
+from eeva.utils import Model, NetworkModel, Prompts
 
 from .database import Database
-
-
-class NetworkModel(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=to_camel,  # snake_case → camelCase
-        populate_by_name=True,  # accept either name or alias on input
-        frozen=True,  # make immutable
-    )
 
 
 class InterviewId(NetworkModel):
@@ -85,6 +76,25 @@ def create_app() -> FastAPI:
         interview = Interview.initialize(interviewer, initial_message, request.subject_name)
         interview_id = InterviewId(id=database.interviews().create(interview))
         return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
+
+    @app.get("/api/interview")
+    def get_interviews() -> list[Interview]:
+        """
+        Get all interviews.
+        """
+        interview_store = database.interviews()
+        return interview_store.get_all()
+
+    @app.get("/api/interview/{interview_id}")
+    def get_interview(interview_id: int) -> Interview:
+        """
+        Get an interview by its ID.
+        """
+        interview_store = database.interviews()
+        interview = interview_store.get(interview_id)
+        if interview is None:
+            raise ValueError(f"Interview with ID {interview_id} not found.")
+        return interview
 
     class GetResponseRequest(BaseModel):
         user_message: str = Field()
