@@ -13,6 +13,7 @@ secrets.json
 .env
 
 output/
+data/
 prompts/**
 !prompts/default/
 !prompts/default/**

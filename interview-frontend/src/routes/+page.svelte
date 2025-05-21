@@ -1,21 +1,76 @@
 <script lang="ts">
 	import IconSend from '@lucide/svelte/icons/send-horizontal';
-	import type { InterviewId, Message } from './+page';
+	import type { CreateInterviewRequest, InterviewId, Message } from '$lib/base';
+	import type { PageData } from './+page';
+	import { onMount } from 'svelte';
 
-	export let data: { interviewId: InterviewId; messages: Message[] };
+	export let data: PageData;
 
-	let { interviewId, messages: cur_messages } = data;
+	let { startMessageId, interviewerPromptId, subjectName: querySubjectName } = data;
 
 	let elemChat: HTMLElement;
 
 	let currentMessage = '';
+
+	let interviewId: InterviewId;
+	let curMessages: Message[] = [];
+
+	onMount(async () => {
+		const subjectName = getSubjectName(querySubjectName);
+
+		const response = await createInterview(startMessageId, interviewerPromptId, subjectName);
+		interviewId = response.interviewId;
+		curMessages = response.messages;
+	});
+
+	function getSubjectName(querySubjectName: string | undefined): string {
+		if (querySubjectName !== undefined) {
+			return querySubjectName;
+		} else {
+			let subjectName = null;
+			while (subjectName === null) {
+				subjectName = prompt('What is your name?');
+			}
+			return subjectName;
+		}
+	}
+
+	async function createInterview(
+		startMessageId: string,
+		interviewerPromptId: string,
+		subjectName: string
+	): Promise<{ interviewId: InterviewId; messages: Message[] }> {
+		const createInterviewRequest: CreateInterviewRequest = {
+			startMessageId: startMessageId,
+			interviewerSystemPromptId: interviewerPromptId,
+			subjectName: subjectName
+		};
+
+		const response: { interviewId: InterviewId; messages: Message[] } = await fetch(
+			`/api/interview`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(createInterviewRequest)
+			}
+		).then(async (response) => {
+			if (response.status !== 200) {
+				const responseText = await response.text();
+				throw new Error('Failed to create interview: ' + responseText);
+			}
+			return response.json();
+		});
+		return response;
+	}
 
 	function scrollChatBottom(behavior?: 'auto' | 'instant' | 'smooth') {
 		elemChat.scrollTo({ top: elemChat.scrollHeight, behavior });
 	}
 
 	async function getResponse(userMessage: string): Promise<Message[]> {
-		const url = `/api/interview/${data.interviewId.id}/respond`;
+		const url = `/api/interview/${interviewId.id}/respond`;
 		const messages = await fetch(url, {
 			method: `POST`,
 			headers: {
@@ -43,14 +98,14 @@
 			content: userMessageText
 		};
 		// Update the message feed
-		cur_messages = [...cur_messages, userMessage];
+		curMessages = [...curMessages, userMessage];
 
 		// Smooth scroll to bottom
 		// Timeout prevents race condition
 		setTimeout(() => scrollChatBottom('smooth'), 0);
 
 		getResponse(userMessageText).then((messages) => {
-			cur_messages = messages;
+			curMessages = messages;
 
 			setTimeout(() => scrollChatBottom('smooth'), 0);
 		});
@@ -74,7 +129,7 @@
 		</div>
 		<!-- Chat Messages Container -->
 		<div bind:this={elemChat} class="flex-1 space-y-4 overflow-y-auto p-4">
-			{#each cur_messages as message}
+			{#each curMessages as message}
 				{#if message.interviewer === false}
 					<div class="flex flex-col items-end">
 						<span class="text-xs text-gray-500"> You </span>

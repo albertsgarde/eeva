@@ -8,3 +8,20 @@ export function expect<T>(value: T | null, message: string): T {
     }
     return value;
 }
+
+
+
+export interface CreateInterviewRequest {
+    startMessageId: string;
+    interviewerSystemPromptId: string;
+    subjectName: string;
+}
+
+export interface InterviewId {
+    id: number;
+}
+
+export interface Message {
+    interviewer: boolean;
+    content: string;
+}
