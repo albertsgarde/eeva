@@ -1,3 +1,4 @@
+import datetime
 import typing
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from .utils import Model, NetworkModel
 class Message(NetworkModel):
     interviewer: bool = Field()
     content: str = Field()
+    timestamp: str = Field()
 
     def to_message(self) -> BaseMessage:
         return HumanMessage(content=self.content)
@@ -28,7 +30,7 @@ class Interviewer(NetworkModel):
                 *[message.to_message() for message in messages],
             ]
         )
-        return Message(interviewer=True, content=response.content)
+        return Message(interviewer=True, content=response.content, timestamp=datetime.datetime.now().isoformat())
 
 
 class Interview(NetworkModel):
@@ -40,12 +42,16 @@ class Interview(NetworkModel):
     def initialize(interviewer: Interviewer, initial_message: str, subject_name: str) -> "Interview":
         return Interview(
             interviewer=interviewer,
-            messages=[Message(interviewer=True, content=initial_message)],
+            messages=[
+                Message(interviewer=True, content=initial_message, timestamp=datetime.datetime.now().isoformat())
+            ],
             subject_name=subject_name,
         )
 
     def respond(self, subject_message: str) -> Message:
-        self.messages.append(Message(interviewer=False, content=subject_message))
+        self.messages.append(
+            Message(interviewer=False, content=subject_message, timestamp=datetime.datetime.now().isoformat())
+        )
         response = self.interviewer.respond(self.messages)
         self.messages.append(response)
         return response

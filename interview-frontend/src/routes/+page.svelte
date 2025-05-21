@@ -77,7 +77,7 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				user_message: userMessage
+				userMessage: userMessage
 			})
 		}).then(async (response) => {
 			if (!response.ok) {

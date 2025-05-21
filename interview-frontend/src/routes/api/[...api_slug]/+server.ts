@@ -39,3 +39,13 @@ export async function PATCH({
 }) {
 	return reroute({ params, request }, 'PATCH');
 }
+
+export async function DELETE({
+	params,
+	request
+}: {
+	params: { api_slug: string };
+	request: Request;
+}) {
+	return reroute({ params, request }, 'DELETE');
+}

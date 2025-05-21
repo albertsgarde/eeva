@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from eeva.interview import Interview, Interviewer, Message
 from eeva.utils import Model, NetworkModel, Prompts
@@ -96,7 +96,7 @@ def create_app() -> FastAPI:
             raise ValueError(f"Interview with ID {interview_id} not found.")
         return interview
 
-    class GetResponseRequest(BaseModel):
+    class GetResponseRequest(NetworkModel):
         user_message: str = Field()
 
     @app.post("/api/interview/{interview_id}/respond")
@@ -109,5 +109,10 @@ def create_app() -> FastAPI:
         interview.respond(request.user_message)
         interview_store.update(interview_id, interview)
         return interview.messages
+
+    @app.delete("/api/interview")
+    def delete_interviews() -> str:
+        database.interviews().clear()
+        return "OK"
 
     return app

@@ -62,6 +62,11 @@ class Table(Generic[T]):
         )
         self.connection.commit()
 
+    def clear(self) -> None:
+        cursor = self.connection.cursor()
+        cursor.execute(f"DELETE FROM {self.table_name}")
+        self.connection.commit()
+
 
 class Database:
     db_path: Path
