@@ -1,4 +1,0 @@
-git reset --hard
-git pull
-uv build --project python
-uv sync --project python
