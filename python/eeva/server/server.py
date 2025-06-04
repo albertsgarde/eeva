@@ -78,7 +78,7 @@ def create_app() -> FastAPI:
         return CreateInterviewResponse(interview_id=interview_id, messages=interview.messages)
 
     @app.get("/api/interview")
-    def get_interviews() -> list[Interview]:
+    def get_interviews() -> list[tuple[int, Interview]]:
         """
         Get all interviews.
         """
