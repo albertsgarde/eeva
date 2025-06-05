@@ -2,7 +2,7 @@
 	import type { Message } from '$lib/base';
 	import ChatFrame from '$lib/ChatFrame.svelte';
 	import ChatMessageContainer from '$lib/ChatMessageContainer.svelte';
-	import type { Interview } from './+page.server.ts';
+	import type { Interview } from './+page.server.js';
 
 	export let data: { interview: Interview };
 
