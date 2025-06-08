@@ -14,6 +14,7 @@ class Table(Generic[T]):
     connection: Connection
     table_name: str
     from_json: Callable[[str], T]
+    watchers: dict[int, dict[int, Callable[[T], None]]] = {}
 
     def __init__(self, table_name: str, db_path: Path, from_json: Callable[[str], T]) -> None:
         connection = sqlite3.connect(db_path.absolute())
@@ -61,6 +62,22 @@ class Table(Generic[T]):
             (item.model_dump_json(), id),
         )
         self.connection.commit()
+        for callback in self.watchers.get(id, {}).values():
+            callback(item)
+
+    def watch(self, id: int, key: int, callback: Callable[[T], None]) -> None:
+        """
+        Watch for changes to an item and call the callback with the updated item.
+        """
+        if id not in self.watchers:
+            self.watchers[id] = {}
+        self.watchers[id][key] = callback
+
+    def unwatch(self, id: int, key: int) -> None:
+        """
+        Stop watching for changes to an item.
+        """
+        del self.watchers[id][key]
 
     def clear(self) -> None:
         cursor = self.connection.cursor()

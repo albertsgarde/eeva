@@ -1,8 +1,11 @@
+import asyncio
 import os
+import random
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import Field
+from sse_starlette import EventSourceResponse
 
 from eeva.interview import Interview, Interviewer, Message
 from eeva.utils import Model, NetworkModel, Prompts
@@ -95,6 +98,38 @@ def create_app() -> FastAPI:
         if interview is None:
             raise ValueError(f"Interview with ID {interview_id} not found.")
         return interview
+
+    @app.get("/api/interview/{interview_id}/stream")
+    async def stream_interview(request: Request, interview_id: int) -> EventSourceResponse:
+        """
+        Stream messages from an interview.
+        """
+
+        queue = asyncio.Queue[Interview](maxsize=1)
+
+        def handle_interview(interview: Interview) -> None:
+            while not queue.empty():
+                try:
+                    queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+            queue.put_nowait(interview)
+
+        key = random.randint(0, 2**63 - 1)
+        database.interviews().watch(interview_id, key, handle_interview)
+
+        async def interview_streamer():
+            try:
+                yield {"data": database.interviews().get(interview_id).model_dump_json()}
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    interview = await queue.get()
+                    yield {"data": interview.model_dump_json()}
+            finally:
+                database.interviews().unwatch(interview_id, key)
+
+        return EventSourceResponse(interview_streamer())
 
     class GetResponseRequest(NetworkModel):
         user_message: str = Field()

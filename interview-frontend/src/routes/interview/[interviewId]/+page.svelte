@@ -4,10 +4,11 @@
 	import ChatInput from '$lib/ChatInput.svelte';
 	import ChatFrame from '$lib/ChatFrame.svelte';
 	import type { Interview } from './+page.server';
+	import { onMount } from 'svelte';
 
-	export let data: { interviewId: InterviewId, interview: Interview};
+	export let data: { interviewId: InterviewId; interview: Interview };
 
-	let {subjectName, messages} = data.interview;
+	let { subjectName, messages } = data.interview;
 
 	let elemChat: ChatMessageContainer;
 
@@ -15,8 +16,22 @@
 	let curMessages: Message[] = messages;
 
 	function scrollToBottom(behavior?: 'auto' | 'instant' | 'smooth') {
-		elemChat.scrollToBottom(behavior);
+		setTimeout(() => elemChat.scrollToBottom(behavior), 0);
 	}
+
+	onMount(() => {
+		const interviewStream = new EventSource(`/api/interview/${interviewId.id}/stream`);
+
+		function onMessage(ev: MessageEvent) {
+			const interview = JSON.parse(ev.data);
+			curMessages = interview.messages;
+			scrollToBottom('smooth');
+		}
+		interviewStream.onmessage = onMessage;
+
+		// Scroll to bottom on mount
+		scrollToBottom('smooth');
+	});
 
 	async function getResponse(userMessage: string): Promise<Message[]> {
 		const url = `/api/interview/${interviewId.id}/respond`;
@@ -47,13 +62,14 @@
 
 		// Smooth scroll to bottom
 		// Timeout prevents race condition
-		setTimeout(() => scrollToBottom('smooth'), 0);
+		scrollToBottom('smooth');
 
-		getResponse(messageText).then((messages) => {
+		getResponse(messageText);
+		/*.then((messages) => {
 			curMessages = messages;
 
 			setTimeout(() => scrollToBottom('smooth'), 0);
-		});
+		});*/
 	}
 </script>
 

@@ -1,5 +1,5 @@
-import datetime
 import typing
+from datetime import datetime
 from pathlib import Path
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -30,7 +30,7 @@ class Interviewer(NetworkModel):
                 *[message.to_message() for message in messages],
             ]
         )
-        return Message(interviewer=True, content=response.content, timestamp=datetime.datetime.now().isoformat())
+        return Message(interviewer=True, content=response.content, timestamp=datetime.now().isoformat())
 
 
 class Interview(NetworkModel):
@@ -42,16 +42,12 @@ class Interview(NetworkModel):
     def initialize(interviewer: Interviewer, initial_message: str, subject_name: str) -> "Interview":
         return Interview(
             interviewer=interviewer,
-            messages=[
-                Message(interviewer=True, content=initial_message, timestamp=datetime.datetime.now().isoformat())
-            ],
+            messages=[Message(interviewer=True, content=initial_message, timestamp=datetime.now().isoformat())],
             subject_name=subject_name,
         )
 
     def respond(self, subject_message: str) -> Message:
-        self.messages.append(
-            Message(interviewer=False, content=subject_message, timestamp=datetime.datetime.now().isoformat())
-        )
+        self.messages.append(Message(interviewer=False, content=subject_message, timestamp=datetime.now().isoformat()))
         response = self.interviewer.respond(self.messages)
         self.messages.append(response)
         return response
