@@ -46,8 +46,20 @@ class Interview(NetworkModel):
             subject_name=subject_name,
         )
 
+    def add_message(self, interviewer: bool, content: str) -> None:
+        self.messages.append(Message(interviewer=interviewer, content=content, timestamp=datetime.now().isoformat()))
+
+    def get_response(self, interviewer: Interviewer | None = None, message_index: int | None = None) -> Message:
+        if interviewer is None:
+            interviewer = self.interviewer
+        if message_index is None:
+            message_index = len(self.messages) - 1
+        if message_index < 0 or message_index >= len(self.messages):
+            raise ValueError("Invalid message ID")
+        return interviewer.respond(self.messages[: message_index + 1])
+
     def respond(self, subject_message: str) -> Message:
-        self.messages.append(Message(interviewer=False, content=subject_message, timestamp=datetime.now().isoformat()))
+        self.add_message(interviewer=False, content=subject_message)
         response = self.interviewer.respond(self.messages)
         self.messages.append(response)
         return response

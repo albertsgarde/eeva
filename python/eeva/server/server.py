@@ -2,8 +2,9 @@ import asyncio
 import os
 import random
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from pydantic import Field
 from sse_starlette import EventSourceResponse
 
@@ -49,6 +50,11 @@ def create_app() -> FastAPI:
 
     prompts = Prompts(dir=prompt_dir)
 
+    model = Model(
+        model_name="gpt-4o-mini",
+        model_provider="openai",
+    )
+
     @app.get("/ready")
     def ready() -> str:
         """
@@ -68,10 +74,6 @@ def create_app() -> FastAPI:
     @app.post("/api/interview")
     def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
         initial_message = prompts.get(request.start_message_id)
-        model = Model(
-            model_name="gpt-4o-mini",
-            model_provider="openai",
-        )
         interviewer = Interviewer(
             system_prompt=prompts.get(request.interviewer_system_prompt_id),
             model=model,
@@ -131,11 +133,47 @@ def create_app() -> FastAPI:
 
         return EventSourceResponse(interview_streamer())
 
+    @app.post("/api/interview/{interview_id}/add_message")
+    def add_message(interview_id: int, interviewer: bool, content: str) -> None:
+        """
+        Add a message to an interview.
+        """
+
+        interview_store = database.interviews()
+        interview = interview_store.get(interview_id)
+        if interview is None:
+            raise ValueError(f"Interview with ID {interview_id} not found.")
+        interview.add_message(interviewer, content)
+        interview_store.update(interview_id, interview)
+
     class GetResponseRequest(NetworkModel):
+        interviewer_system_prompt_id: str | None = Field(default=None)
+        message_index: int | None = Field(default=None, ge=0)
+
+    @app.post("/api/interview/{interview_id}/get_response")
+    def get_response(interview_id: int, request: Annotated[GetResponseRequest, Query()]) -> Message:
+        """
+        Get a response from the interview.
+        """
+        interview_store = database.interviews()
+        interview = interview_store.get(interview_id)
+        if interview is None:
+            raise ValueError(f"Interview with ID {interview_id} not found.")
+
+        if request.interviewer_system_prompt_id is None:
+            interviewer = None
+        else:
+            interviewer = Interviewer(
+                system_prompt=prompts.get(request.interviewer_system_prompt_id),
+                model=model,
+            )
+        return interview.get_response(interviewer, request.message_index)
+
+    class RespondRequest(NetworkModel):
         user_message: str = Field()
 
     @app.post("/api/interview/{interview_id}/respond")
-    def respond_to_interview(interview_id: int, request: GetResponseRequest) -> list[Message]:
+    def respond_to_interview(interview_id: int, request: RespondRequest) -> list[Message]:
         """
         Respond to an interview with a message.
         """
