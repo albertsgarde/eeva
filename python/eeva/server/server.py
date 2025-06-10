@@ -150,7 +150,7 @@ def create_app() -> FastAPI:
         interviewer_system_prompt_id: str | None = Field(default=None)
         message_index: int | None = Field(default=None, ge=0)
 
-    @app.post("/api/interview/{interview_id}/get_response")
+    @app.get("/api/interview/{interview_id}/get_response")
     def get_response(interview_id: int, request: Annotated[GetResponseRequest, Query()]) -> Message:
         """
         Get a response from the interview.
