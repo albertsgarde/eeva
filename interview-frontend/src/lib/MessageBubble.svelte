@@ -3,20 +3,33 @@
 
 	export let message: Message;
 	export let subjectName: string;
+	export let active: boolean = true;
+
+	export let onClick: () => void = () => {};
 </script>
 
 {#if message.interviewer === false}
 	<div class="flex flex-col items-end">
 		<span class="text-xs text-gray-500"> {subjectName} </span>
-		<div class="max-w-xl self-end rounded-lg rounded-tr-none bg-blue-500 p-3 text-white">
+		<button
+			onclick={onClick}
+			class="max-w-xl self-end rounded-lg rounded-tr-none text-left {active
+				? 'bg-blue-500'
+				: 'bg-blue-200'} p-3 text-white"
+		>
 			{message.content}
-		</div>
+		</button>
 	</div>
 {:else}
 	<div class="flex flex-col">
 		<span class="text-xs text-gray-500"> Interviewer </span>
-		<div class="max-w-xl self-start rounded-lg rounded-tl-none bg-gray-200 p-3">
+		<button
+			onclick={onClick}
+			class="max-w-xl self-start rounded-lg rounded-tl-none text-left {active
+				? 'bg-gray-200'
+				: 'bg-gray-100 text-gray-500'} p-3"
+		>
 			{message.content}
-		</div>
+		</button>
 	</div>
 {/if}

@@ -14,6 +14,7 @@
 
 	let interviwerSystemPromptId: string = '';
 	let suggestion: string = 'Suggestion will appear here';
+	let activeUntil: number = -1;
 
 	const curMessages: Message[] = interview.messages;
 	const subjectName = interview.subjectName;
@@ -30,7 +31,7 @@
 			alert('Please enter a system prompt ID for the interviewer.');
 			return;
 		}
-		const url = `/api/interview/${interviewId.id}/get_response?interviewer_system_prompt_id=${interviwerSystemPromptId}`;
+		const url = `/api/interview/${interviewId.id}/get_response?interviewerSystemPromptId=${interviwerSystemPromptId}&messageIndex=${activeUntil == -1 ? null : activeUntil}`;
 		const message: Message = await fetch(url, {
 			method: `GET`
 		}).then(async (response) => {
@@ -70,7 +71,15 @@
 	</div>
 	<div class="w-1/2">
 		<ChatFrame>
-			<ChatMessageContainer bind:this={elemChat} messages={curMessages} {subjectName} />
+			<ChatMessageContainer
+				bind:this={elemChat}
+				messages={curMessages}
+				{subjectName}
+				{activeUntil}
+				onBubbleClick={(index: number) => {
+					activeUntil = index;
+				}}
+			/>
 		</ChatFrame>
 	</div>
 </div>

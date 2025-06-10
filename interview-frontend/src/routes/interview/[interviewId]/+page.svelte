@@ -65,16 +65,15 @@
 		scrollToBottom('smooth');
 
 		getResponse(messageText);
-		/*.then((messages) => {
-			curMessages = messages;
-
-			setTimeout(() => scrollToBottom('smooth'), 0);
-		});*/
 	}
 </script>
 
-<!-- Body -->
-<ChatFrame>
-	<ChatMessageContainer bind:this={elemChat} messages={curMessages} subjectName="You" />
-	<ChatInput sendMessage={addMessage} />
-</ChatFrame>
+<div class="flex">
+	<div class="w-1/4 p-4"></div>
+	<div class="w-1/2">
+		<ChatFrame>
+			<ChatMessageContainer bind:this={elemChat} messages={curMessages} subjectName="You" />
+			<ChatInput sendMessage={addMessage} />
+		</ChatFrame>
+	</div>
+</div>
