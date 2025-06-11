@@ -9,7 +9,8 @@ from pydantic import Field
 from sse_starlette import EventSourceResponse
 
 from eeva.interview import Interview, Interviewer, Message
-from eeva.utils import Model, NetworkModel, Prompts
+from eeva.prompt import PromptId, Prompts
+from eeva.utils import Model, NetworkModel
 
 from .database import Database
 
@@ -19,8 +20,8 @@ class InterviewId(NetworkModel):
 
 
 class CreateInterviewRequest(NetworkModel):
-    interviewer_system_prompt_id: str = Field()
-    start_message_id: str = Field()
+    interviewer_system_prompt_id: PromptId = Field()
+    start_message_id: PromptId = Field()
     subject_name: str = Field()
 
 
@@ -61,15 +62,6 @@ def create_app() -> FastAPI:
         Health check endpoint.
         """
         return "OK"
-
-    @app.get("/api/prompt")
-    def get_prompt(id: str) -> str:
-        """
-        Get a prompt by its ID.
-        """
-        print(f"Fetching prompt with ID: {id}")
-
-        return prompts.get(id)
 
     @app.post("/api/interview")
     def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
@@ -147,7 +139,7 @@ def create_app() -> FastAPI:
         interview_store.update(interview_id, interview)
 
     class GetResponseRequest(NetworkModel):
-        interviewer_system_prompt_id: str | None = Field(default=None)
+        interviewer_system_prompt_id: PromptId | None = Field(default=None)
         message_index: int | None = Field(default=None, ge=0)
 
     @app.get("/api/interview/{interview_id}/get_response")

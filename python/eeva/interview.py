@@ -6,6 +6,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 from typing_extensions import Sequence
 
+from .prompt import Prompt
 from .utils import Model, NetworkModel
 
 
@@ -19,14 +20,14 @@ class Message(NetworkModel):
 
 
 class Interviewer(NetworkModel):
-    system_prompt: str = Field()
+    system_prompt: Prompt = Field()
     model: Model = Field()
 
     def respond(self, messages: Sequence[Message]) -> Message:
         chat = self.model.init_chat_model()
         response = chat.invoke(
             [
-                SystemMessage(content=self.system_prompt),
+                SystemMessage(content=self.system_prompt.content),
                 *[message.to_message() for message in messages],
             ]
         )
@@ -39,10 +40,10 @@ class Interview(NetworkModel):
     subject_name: str = Field()
 
     @staticmethod
-    def initialize(interviewer: Interviewer, initial_message: str, subject_name: str) -> "Interview":
+    def initialize(interviewer: Interviewer, initial_message: Prompt, subject_name: str) -> "Interview":
         return Interview(
             interviewer=interviewer,
-            messages=[Message(interviewer=True, content=initial_message, timestamp=datetime.now().isoformat())],
+            messages=[Message(interviewer=True, content=initial_message.content, timestamp=datetime.now().isoformat())],
             subject_name=subject_name,
         )
 
