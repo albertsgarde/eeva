@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/public';
+import { z } from 'zod/v4'
 
 export const BACKEND_ORIGIN: URL = new URL(env.PUBLIC_BACKEND_ORIGIN || 'http://localhost:8000');
 
@@ -9,31 +10,38 @@ export function expect<T>(value: T | null, message: string): T {
     return value;
 }
 
-export interface CreateInterviewRequest {
-    startMessageId: PromptId;
-    interviewerSystemPromptId: PromptId;
-    subjectName: string;
-}
+export const InterviewId = z.preprocess((val) => {
+    if (typeof val === "number") {
+        return {id: val}
+    }
+    return val
+},z.object({
+    id: z.int().gt(0)
+}).readonly());
 
-export interface InterviewId {
-    id: number;
-}
-
-export interface PromptId {
-    id: string;
-}
+export type InterviewId = z.infer<typeof InterviewId>
 
 const PROMPT_ID_REGEX = /^[a-zA-Z0-9\-]+$/;
 
-export function createPromptId(id: string): PromptId {
-    if (PROMPT_ID_REGEX.test(id))
-        return { id };
-    else {
-        throw new Error(`Invalid prompt ID: ${id}. It must match the regex ${PROMPT_ID_REGEX}`);
+export const PromptId = z.preprocess((val) => {
+    if (typeof val ==="string") {
+        return {id: val}
     }
-}
+    return val
+}, z.object({
+    id: z.string().regex(PROMPT_ID_REGEX)
+}).readonly());
+
+export type PromptId = z.infer<typeof PromptId>
 
 export interface Message {
     interviewer: boolean;
     content: string;
+}
+
+
+export interface CreateInterviewRequest {
+    startMessageId: PromptId;
+    interviewerSystemPromptId: PromptId;
+    subjectName: string;
 }
