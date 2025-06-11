@@ -1,10 +1,10 @@
 set dotenv-load := true
 
-backend: 
-    uv run --directory python/ eeva
+backend arg="": 
+    uv run --directory python/ eeva {{arg}}
 
-b:
-    just backend
+b arg="":
+    just backend {{arg}}
 
 frontend:
     npm run --prefix=interview-frontend dev
