@@ -6,10 +6,10 @@ from fastapi import APIRouter, Query, Request
 from pydantic import Field
 from sse_starlette import EventSourceResponse
 
-from eeva.interview import Interview, Interviewer, Message
-from eeva.prompt import PromptId, Prompts
-from eeva.server.database import Database
-from eeva.utils import Model, NetworkModel
+from ..interview import Interview, Interviewer, Message
+from ..utils import Model, NetworkModel
+from .database import Database
+from .prompt import PromptId
 
 
 class InterviewId(NetworkModel):
@@ -27,14 +27,14 @@ class CreateInterviewResponse(NetworkModel):
     messages: list[Message] = Field()
 
 
-def create_router(database: Database, prompts: Prompts, model: Model) -> APIRouter:
+def create_router(database: Database, model: Model) -> APIRouter:
     router = APIRouter()
 
     @router.post("")
     def create_interview(request: CreateInterviewRequest) -> CreateInterviewResponse:
-        initial_message = prompts.get(request.start_message_id)
+        initial_message = database.prompts().get(request.start_message_id.id)
         interviewer = Interviewer(
-            system_prompt=prompts.get(request.interviewer_system_prompt_id),
+            system_prompt=database.prompts().get(request.interviewer_system_prompt_id.id),
             model=model,
         )
         interview = Interview.initialize(interviewer, initial_message, request.subject_name)
@@ -65,7 +65,6 @@ def create_router(database: Database, prompts: Prompts, model: Model) -> APIRout
         """
         Stream messages from an interview.
         """
-
         queue = asyncio.Queue[Interview](maxsize=1)
 
         def handle_interview(interview: Interview) -> None:
@@ -115,6 +114,7 @@ def create_router(database: Database, prompts: Prompts, model: Model) -> APIRout
         Get a response from the interview.
         """
         interview_store = database.interviews()
+        prompts = database.prompts()
         interview = interview_store.get(interview_id)
         if interview is None:
             raise ValueError(f"Interview with ID {interview_id} not found.")
@@ -123,7 +123,7 @@ def create_router(database: Database, prompts: Prompts, model: Model) -> APIRout
             interviewer = None
         else:
             interviewer = Interviewer(
-                system_prompt=prompts.get(request.interviewer_system_prompt_id),
+                system_prompt=prompts.get(request.interviewer_system_prompt_id.id),
                 model=model,
             )
         return interview.get_response(interviewer, request.message_index)

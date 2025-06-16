@@ -3,10 +3,9 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from eeva.prompt import Prompts
-from eeva.server import interview
 from eeva.utils import Model
 
+from . import interview, prompt
 from .database import Database
 
 
@@ -28,8 +27,7 @@ def create_app() -> FastAPI:
         database_path = Path(database_path_str).resolve()
 
     database = Database(database_path)
-
-    prompts = Prompts(dir=prompt_dir)
+    prompt.load_default_prompts(database, prompt_dir)
 
     model = Model(
         model_name="gpt-4o-mini",
@@ -43,6 +41,7 @@ def create_app() -> FastAPI:
         """
         return "OK"
 
-    app.include_router(interview.create_router(database, prompts, model), prefix="/api/interview")
+    app.include_router(prompt.create_router(database), prefix="/api/prompt")
+    app.include_router(interview.create_router(database, model), prefix="/api/interview")
 
     return app
