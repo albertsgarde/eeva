@@ -6,6 +6,8 @@ from fastapi import APIRouter, Query, Request
 from pydantic import Field
 from sse_starlette import EventSourceResponse
 
+from eeva.prompt import Prompt
+
 from ..interview import Interview, Interviewer, Message
 from ..utils import Model, NetworkModel
 from .database import Database
@@ -126,6 +128,26 @@ def create_router(database: Database, model: Model) -> APIRouter:
                 system_prompt=prompts.get(request.interviewer_system_prompt_id.id),
                 model=model,
             )
+        return interview.get_response(interviewer, request.message_index)
+
+    class GetResponseCustomPromptRequest(NetworkModel):
+        prompt: str = Field()
+        message_index: int | None = Field(default=None, ge=0)
+
+    @router.get("/{interview_id}/get_response_custom_prompt")
+    def get_response_custom_prompt(interview_id: int, request: GetResponseCustomPromptRequest) -> Message:
+        """
+        Get a response from the interview using a custom system prompt.
+        """
+        interview_store = database.interviews()
+        interview = interview_store.get(interview_id)
+        if interview is None:
+            raise ValueError(f"Interview with ID {interview_id} not found.")
+
+        interviewer = Interviewer(
+            system_prompt=Prompt(content=request.prompt),
+            model=model,
+        )
         return interview.get_response(interviewer, request.message_index)
 
     class RespondRequest(NetworkModel):
