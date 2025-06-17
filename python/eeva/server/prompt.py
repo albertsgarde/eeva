@@ -8,10 +8,6 @@ from eeva.server.database import Database
 from eeva.utils import NetworkModel
 
 
-class CreatePromptRequest(NetworkModel):
-    prompt: Prompt = Field()
-
-
 def load_default_prompts(database: Database, prompt_dir: Path):
     files = [file for file in prompt_dir.rglob("*.txt") if file.is_file()]
     ids: dict[PromptId, Path] = {}
@@ -26,13 +22,18 @@ def load_default_prompts(database: Database, prompt_dir: Path):
             print(f"Duplicate prompt ID '{id}'. Files: {ids[id].absolute()} and {file.absolute()}")
             continue
         ids[id] = file
-    prompts = [Prompt(id=id, content=file.read_text()) for id, file in ids.items()]
-    for prompt in prompts:
-        if database.prompts().exists(prompt.id.id):
-            print(f"Prompt with id {prompt.id} already exists in the database.")
+    prompts = [(id, Prompt(content=file.read_text())) for id, file in ids.items()]
+    for id, prompt in prompts:
+        if database.prompts().exists(id.id):
+            print(f"Prompt with id {id} already exists in the database.")
             continue
-        database.prompts().create_with_id(prompt, prompt.id.id)
-        print(f"Loaded prompt: {prompt.id} - {prompt.content[:30]}...")
+        database.prompts().create_with_id(prompt, id.id)
+        print(f"Loaded prompt: {id} - {prompt.content[:30]}...")
+
+
+class CreatePromptRequest(NetworkModel):
+    id: PromptId = Field()
+    prompt: Prompt = Field()
 
 
 def create_router(database: Database) -> APIRouter:
@@ -41,11 +42,12 @@ def create_router(database: Database) -> APIRouter:
     @router.post("")
     def create_prompt(request: CreatePromptRequest):
         prompts = database.prompts()
+        id = request.id
         prompt = request.prompt
-        if prompts.get(prompt.id.id) is not None:
-            raise ValueError(f"Prompt with id {prompt.id} already exists.")
-        prompts.create_with_id(prompt, prompt.id.id)
-        return {"status": "created", "id": prompt.id.id}
+        if prompts.get(id.id) is not None:
+            raise ValueError(f"Prompt with id {id.id} already exists.")
+        prompts.create_with_id(prompt, id.id)
+        return {"status": "created", "id": id.id}
 
     @router.get("/{prompt_id}")
     def get_prompt(prompt_id: str):
@@ -61,7 +63,7 @@ def create_router(database: Database) -> APIRouter:
         prompts = database.prompts()
         all_prompts = prompts.get_all()
         # Return as list of dicts with id and prompt content
-        return [prompt.model_dump() for id, prompt in all_prompts]
+        return [{"id": id, "prompt": prompt.model_dump()} for id, prompt in all_prompts]
 
     @router.delete("/{prompt_id}")
     def delete_prompt(prompt_id: str):

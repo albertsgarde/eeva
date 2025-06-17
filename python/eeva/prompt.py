@@ -13,7 +13,6 @@ class PromptId(NetworkModel):
 
 
 class Prompt(NetworkModel):
-    id: PromptId = Field()
     content: str = Field()
 
     def __str__(self) -> str:
