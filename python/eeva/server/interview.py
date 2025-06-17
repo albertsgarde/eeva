@@ -3,6 +3,7 @@ import random
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
+from fastapi.params import Body
 from pydantic import Field
 from sse_starlette import EventSourceResponse
 
@@ -134,8 +135,10 @@ def create_router(database: Database, model: Model) -> APIRouter:
         interviewer_system_prompt: str = Field()
         message_index: int | None = Field(default=None, ge=0)
 
-    @router.get("/{interview_id}/get_response_custom_prompt")
-    def get_response_custom_prompt(interview_id: int, request: GetResponseCustomPromptRequest) -> Message:
+    @router.post("/{interview_id}/get_response_custom_prompt")
+    def get_response_custom_prompt(
+        interview_id: int, request: Annotated[GetResponseCustomPromptRequest, Body()]
+    ) -> Message:
         """
         Get a response from the interview using a custom system prompt.
         """
