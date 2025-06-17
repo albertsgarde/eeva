@@ -20,3 +20,7 @@ update:
 
 u:
     just update
+
+push BRANCH:
+    jj bookmark move {{BRANCH}} --to=@-
+    jj git push
