@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import Field, ValidationError
 
 from eeva.prompt import Prompt, PromptId
@@ -22,7 +22,7 @@ def load_default_prompts(database: Database, prompt_dir: Path):
             print(f"Duplicate prompt ID '{id}'. Files: {ids[id].absolute()} and {file.absolute()}")
             continue
         ids[id] = file
-    prompts = [(id, Prompt(content=file.read_text())) for id, file in ids.items()]
+    prompts = [(id, Prompt(content=file.read_text(encoding="utf-8"))) for id, file in ids.items()]
     for id, prompt in prompts:
         if database.prompts().exists(id.id):
             print(f"Prompt with id {id} already exists in the database.")
@@ -54,8 +54,8 @@ def create_router(database: Database) -> APIRouter:
         prompts = database.prompts()
         try:
             prompt = prompts.get(prompt_id)
-        except ValueError:
-            return {"error": f"Prompt '{prompt_id}' not found"}, 404
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=f"Prompt '{prompt_id}' not found") from e
         return prompt
 
     @router.get("")
