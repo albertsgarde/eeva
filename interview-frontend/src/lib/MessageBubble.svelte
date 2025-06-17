@@ -13,7 +13,7 @@
 		<span class="text-xs text-gray-500"> {subjectName} </span>
 		<button
 			onclick={onClick}
-			class="max-w-xl self-end rounded-lg rounded-tr-none text-left {active
+			class="max-w-xl select-text self-end rounded-lg rounded-tr-none text-left {active
 				? 'bg-blue-500'
 				: 'bg-blue-200'} p-3 text-white"
 		>
@@ -25,7 +25,7 @@
 		<span class="text-xs text-gray-500"> Interviewer </span>
 		<button
 			onclick={onClick}
-			class="max-w-xl self-start rounded-lg rounded-tl-none text-left {active
+			class="max-w-xl select-text self-start rounded-lg rounded-tl-none text-left {active
 				? 'bg-gray-200'
 				: 'bg-gray-100 text-gray-500'} p-3"
 		>
