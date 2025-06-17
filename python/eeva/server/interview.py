@@ -131,7 +131,7 @@ def create_router(database: Database, model: Model) -> APIRouter:
         return interview.get_response(interviewer, request.message_index)
 
     class GetResponseCustomPromptRequest(NetworkModel):
-        prompt: str = Field()
+        interviewer_system_prompt: str = Field()
         message_index: int | None = Field(default=None, ge=0)
 
     @router.get("/{interview_id}/get_response_custom_prompt")
@@ -145,7 +145,7 @@ def create_router(database: Database, model: Model) -> APIRouter:
             raise ValueError(f"Interview with ID {interview_id} not found.")
 
         interviewer = Interviewer(
-            system_prompt=Prompt(content=request.prompt),
+            system_prompt=Prompt(content=request.interviewer_system_prompt),
             model=model,
         )
         return interview.get_response(interviewer, request.message_index)
