@@ -12,7 +12,7 @@
 
 	let elemChat: ChatMessageContainer;
 
-	let interviwerSystemPromptId: string = '';
+	let interviewerSystemPromptId: string = '';
 	let suggestion: string = 'Suggestion will appear here';
 	let activeUntil: number = -1;
 
@@ -27,11 +27,11 @@
 	}
 
 	async function getSuggestion(): Promise<void> {
-		if (!interviwerSystemPromptId) {
+		if (!interviewerSystemPromptId) {
 			alert('Please enter a system prompt ID for the interviewer.');
 			return;
 		}
-		const url = `/api/interview/${interviewId.id}/get_response?interviewerSystemPromptId=${interviwerSystemPromptId}&messageIndex=${activeUntil == -1 ? null : activeUntil}`;
+		const url = `/api/interview/${interviewId.id}/get_response?interviewerSystemPromptId=${interviewerSystemPromptId}&messageIndex=${activeUntil == -1 ? null : activeUntil}`;
 		const message: Message = await fetch(url, {
 			method: `GET`
 		}).then(async (response) => {
@@ -48,7 +48,7 @@
 	<div class="w-1/4 p-4">
 		<div class="flex">
 			<input
-				bind:value={interviwerSystemPromptId}
+				bind:value={interviewerSystemPromptId}
 				type="text"
 				placeholder="System prompt id for interviewer..."
 				class="flex-1 border focus:outline-none"
