@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from eeva.utils import Model
 
-from . import interview, prompt
+from . import interview, prompt, question
 from .database import Database
 
 
@@ -43,5 +43,6 @@ def create_app() -> FastAPI:
 
     app.include_router(prompt.create_router(database), prefix="/api/prompt")
     app.include_router(interview.create_router(database, model), prefix="/api/interview")
+    app.include_router(question.create_router(database), prefix="/api/question")
 
     return app

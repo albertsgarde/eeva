@@ -5,6 +5,8 @@ from pathlib import Path
 from langchain import chat_models
 from pydantic import BaseModel, ConfigDict, Field, alias_generators
 
+ID_PATTERN = r"^[0-9a-zA-Z\-]+$"
+
 
 class NetworkModel(BaseModel):
     model_config = ConfigDict(

@@ -21,7 +21,7 @@ export const InterviewId = z.preprocess((val) => {
 
 export type InterviewId = z.infer<typeof InterviewId>
 
-const PROMPT_ID_REGEX = /^[a-zA-Z0-9\-]+$/;
+export const ID_PATTERN = /^[a-zA-Z0-9\-]+$/;
 
 export const PromptId = z.preprocess((val) => {
     if (typeof val ==="string") {
@@ -29,7 +29,7 @@ export const PromptId = z.preprocess((val) => {
     }
     return val
 }, z.object({
-    id: z.string().regex(PROMPT_ID_REGEX)
+    id: z.string().regex(ID_PATTERN)
 }).readonly());
 
 export type PromptId = z.infer<typeof PromptId>
@@ -44,4 +44,20 @@ export interface CreateInterviewRequest {
     startMessageId: PromptId;
     interviewerSystemPromptId: PromptId;
     subjectName: string;
+}
+
+export const QuestionId = z.preprocess((val) => {
+    if (typeof val === "string") {
+        return {id: val}
+    }
+    return val
+}, z.object({
+    id: z.string().regex(ID_PATTERN)
+}).readonly());
+
+export type QuestionId = z.infer<typeof QuestionId>
+
+export interface Question {
+    question: string;
+    exampleAnswers: string[];
 }

@@ -1,12 +1,10 @@
 from pydantic import Field
 
-from eeva.utils import NetworkModel
-
-PROMPT_ID_PATTERN = r"^[0-9a-zA-Z\-]+$"
+from eeva.utils import ID_PATTERN, NetworkModel
 
 
 class PromptId(NetworkModel):
-    id: str = Field(pattern=PROMPT_ID_PATTERN)
+    id: str = Field(pattern=ID_PATTERN)
 
     def __str__(self) -> str:
         return self.id

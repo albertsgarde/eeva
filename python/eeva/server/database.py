@@ -5,6 +5,7 @@ from typing import Any, Callable, Generic, Type, TypeVar
 
 from eeva.interview import Interview
 from eeva.prompt import Prompt
+from eeva.question import Question
 from eeva.utils import NetworkModel
 
 type KeyType = int | str  # Define a type for keys that can be either int or str
@@ -130,6 +131,13 @@ class Table(Generic[K, T]):
         """
         del self.watchers[id][key]
 
+    def delete(self, id: K) -> None:
+        cursor = self.connection.cursor()
+        cursor.execute(f"DELETE FROM {self.table_name} WHERE id = ?", (id,))
+        self.connection.commit()
+        if id in self.watchers:
+            del self.watchers[id]
+
     def clear(self) -> None:
         cursor = self.connection.cursor()
         cursor.execute(f"DELETE FROM {self.table_name}")
@@ -157,5 +165,13 @@ class Database:
             "prompt",
             self.db_path,
             Prompt.model_validate_json,
+            key_type=str,
+        )
+
+    def questions(self) -> Table[str, Question]:
+        return Table[str, Question](
+            "question",
+            self.db_path,
+            Question.model_validate_json,
             key_type=str,
         )

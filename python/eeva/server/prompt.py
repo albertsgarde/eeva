@@ -44,7 +44,7 @@ def create_router(database: Database) -> APIRouter:
         prompts = database.prompts()
         id = request.id
         prompt = request.prompt
-        if prompts.get(id.id) is not None:
+        if prompts.exists(id.id):
             raise ValueError(f"Prompt with id {id.id} already exists.")
         prompts.create_with_id(prompt, id.id)
         return {"status": "created", "id": id.id}
@@ -69,23 +69,17 @@ def create_router(database: Database) -> APIRouter:
     def delete_prompt(prompt_id: str):
         prompts = database.prompts()
         # Check existence
-        try:
-            prompt = prompts.get(prompt_id)
-        except ValueError:
-            return {"error": f"Prompt '{prompt_id}' not found"}, 404
-        cursor = prompts.connection.cursor()
-        cursor.execute(f"DELETE FROM {prompts.table_name} WHERE id = ?", (prompt_id,))
-        prompts.connection.commit()
-        return {"status": "deleted", "prompt": prompt}
+        if not prompts.exists(prompt_id):
+            raise HTTPException(status_code=404, detail=f"Prompt '{prompt_id}' not found")
+        prompts.delete(prompt_id)
+        return {"status": "deleted"}
 
     @router.put("/{prompt_id}")
     def update_prompt(prompt_id: str, request: CreatePromptRequest):
         prompts = database.prompts()
         prompt = request.prompt
-        try:
-            prompts.get(prompt_id)
-        except ValueError:
-            return {"error": f"Prompt '{prompt_id}' not found"}, 404
+        if not prompts.exists(prompt_id):
+            raise HTTPException(status_code=404, detail=f"Prompt '{prompt_id}' not found")
         prompts.update(prompt_id, prompt)
         return {"status": "updated", "id": prompt_id}
 
