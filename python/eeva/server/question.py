@@ -56,6 +56,18 @@ def create_router(database: Database) -> APIRouter:
         questions.delete(question_id)
         return {"status": "deleted"}
 
+    @router.put("")
+    def update_questions(request: dict[QuestionId, Question]):
+        questions = database.questions()
+        for question_id, question in request.items():
+            if questions.exists(question_id):
+                questions.update(question_id, question)
+            else:
+                questions.create_with_id(question, question_id)
+        for id, question in request.items():
+            questions.update(id, question)
+        return {"status": "updated"}
+
     @router.put("/{question_id}")
     def update_question(question_id: QuestionId, question: Question):
         questions = database.questions()
