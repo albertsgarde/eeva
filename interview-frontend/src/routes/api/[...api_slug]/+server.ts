@@ -30,6 +30,16 @@ export async function POST({
 	return reroute({ params, request }, 'POST');
 }
 
+export async function PUT({
+	params,
+	request
+}: {
+	params: { api_slug: string };
+	request: Request;
+}) {
+	return reroute({ params, request }, 'PUT');
+}
+
 export async function PATCH({
 	params,
 	request

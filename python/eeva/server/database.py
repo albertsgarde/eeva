@@ -3,6 +3,8 @@ from pathlib import Path
 from sqlite3 import Connection
 from typing import Any, Callable, Generic, Type, TypeVar
 
+from eeva.form import Form
+from eeva.form_response import FormResponse
 from eeva.interview import Interview
 from eeva.prompt import Prompt
 from eeva.question import Question
@@ -174,4 +176,20 @@ class Database:
             self.db_path,
             Question.model_validate_json,
             key_type=str,
+        )
+
+    def forms(self) -> Table[str, Form]:
+        return Table[str, Form](
+            "form",
+            self.db_path,
+            Form.model_validate_json,
+            key_type=str,
+        )
+
+    def form_responses(self) -> Table[int, FormResponse]:
+        return Table[int, FormResponse](
+            "form_response",
+            self.db_path,
+            FormResponse.model_validate_json,
+            key_type=int,
         )

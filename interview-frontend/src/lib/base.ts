@@ -61,3 +61,37 @@ export interface Question {
     question: string;
     exampleAnswers: string[];
 }
+
+export const FormId = z.preprocess((val) => {
+    if (typeof val === "string") {
+        return {id: val}
+    }
+    return val
+}, z.object({
+    id: z.string().regex(ID_PATTERN)
+}).readonly());
+
+export type FormId = z.infer<typeof FormId>
+
+export const FormResponseId = z.preprocess((val) => {
+    if (typeof val === "number") {
+        return {id: val}
+    }       
+    return val
+}, z.object({
+    id: z.number().int().gte(0)
+}).readonly());
+
+export type FormResponseId = z.infer<typeof FormResponseId>
+
+export interface QuestionResponse {
+    questionId: QuestionId;
+    question: Question;
+    response: string;
+}
+
+export interface FormResponse {
+    formId: FormId;
+    responses: QuestionResponse[];
+    subjectName: string;
+}
