@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import Field
 
 from eeva.form import FormId
@@ -68,14 +68,18 @@ def create_router(database: Database) -> APIRouter:
         form_responses.update(form_response_id, form_response)
 
     @router.put("/{form_response_id}/subject-name")
-    def update_subject_name(form_response_id: FormResponseId, subject_name: str):
+    def update_subject_name(form_response_id: FormResponseId, subject_name: Annotated[str, Body()]):
         form_responses = database.form_responses()
         if not form_responses.exists(form_response_id):
             raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found")
 
         form_response = form_responses.get(form_response_id)
-        form_response.subject_name = subject_name
-        form_responses.update(form_response_id, form_response)
+        new_form_response = FormResponse(
+            form_id=form_response.form_id,
+            responses=form_response.responses,
+            subject_name=subject_name,
+        )
+        form_responses.update(form_response_id, new_form_response)
         return {"status": "updated", "id": form_response_id}
 
     return router
