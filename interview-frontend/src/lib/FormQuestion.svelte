@@ -2,7 +2,9 @@
 	import type { QuestionResponse } from './base';
 
 	export let questionResponse: QuestionResponse;
-	export let onSave: () => Promise<void>;
+	export let onSave: (response: string) => Promise<void>;
+
+	let response: string = questionResponse.response;
 </script>
 
 <h2 class="text-xl font-semibold text-gray-100">{questionResponse.question.question}</h2>
@@ -28,7 +30,8 @@
 
 <button
 	class="rounded bg-green-600 px-4 py-2 font-bold text-white hover:bg-green-700 focus:outline-none active:bg-green-800"
-	onclick={onSave}
+	onclick={() => onSave(response)}
+	disabled={response === questionResponse.response}
 >
 	Save
 </button>
