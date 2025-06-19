@@ -34,17 +34,20 @@ export const PromptId = z.preprocess((val) => {
 
 export type PromptId = z.infer<typeof PromptId>
 
-export interface Message {
-    interviewer: boolean;
-    content: string;
-}
+export const Message = z.object({
+    interviewer: z.boolean(),
+    content: z.string()
+}).readonly();
 
+export type Message = z.infer<typeof Message>;
 
-export interface CreateInterviewRequest {
-    startMessageId: PromptId;
-    interviewerSystemPromptId: PromptId;
-    subjectName: string;
-}
+export const CreateInterviewRequest = z.object({
+    startMessageId: PromptId,
+    interviewerSystemPromptId: PromptId,
+    subjectName: z.string()
+}).readonly();
+
+export type CreateInterviewRequest = z.infer<typeof CreateInterviewRequest>;
 
 export const QuestionId = z.preprocess((val) => {
     if (typeof val === "string") {
@@ -57,10 +60,13 @@ export const QuestionId = z.preprocess((val) => {
 
 export type QuestionId = z.infer<typeof QuestionId>
 
-export interface Question {
-    question: string;
-    exampleAnswers: string[];
-}
+
+export const Question = z.object({
+    question: z.string(),
+    exampleAnswers: z.array(z.string())
+}).readonly();
+
+export type Question = z.infer<typeof Question>
 
 export const FormId = z.preprocess((val) => {
     if (typeof val === "string") {
@@ -84,14 +90,18 @@ export const FormResponseId = z.preprocess((val) => {
 
 export type FormResponseId = z.infer<typeof FormResponseId>
 
-export interface QuestionResponse {
-    questionId: QuestionId;
-    question: Question;
-    response: string;
-}
+export const QuestionResponse = z.object({
+    questionId: QuestionId,
+    question: Question,
+    response: z.string()
+}).readonly();
 
-export interface FormResponse {
-    formId: FormId;
-    responses: QuestionResponse[];
-    subjectName: string;
-}
+export type QuestionResponse = z.infer<typeof QuestionResponse>;
+
+export const FormResponse = z.object({
+    formId: FormId,
+    responses: z.array(QuestionResponse),
+    subjectName: z.string()
+}).readonly();
+
+export type FormResponse = z.infer<typeof FormResponse>;
