@@ -45,4 +45,14 @@ def create_router(database: Database) -> APIRouter:
         forms.delete(form_id)
         return {"status": "deleted"}
 
+    @router.put("/{form_id}")
+    def update_form(form_id: FormId, form: Form):
+        forms = database.forms()
+        if not forms.exists(form_id):
+            forms.create_with_id(form, form_id)
+            return {"status": "created", "id": form_id}
+        else:
+            forms.update(form_id, form)
+            return {"status": "updated", "id": form_id}
+
     return router
