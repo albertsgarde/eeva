@@ -4,8 +4,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import Field, ValidationError
 
 from eeva.prompt import Prompt, PromptId
-from eeva.server.database import Database
 from eeva.utils import NetworkModel
+
+from .database import Database
 
 
 def load_default_prompts(database: Database, prompt_dir: Path):

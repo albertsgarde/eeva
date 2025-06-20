@@ -10,7 +10,7 @@ async function createFormResponse(
     };
 
     const response: { id: FormResponseId } = await fetch(
-        `/api/form-response/create-from-form`,
+        `/api/form-responses/create-from-form`,
         {
             method: 'POST',
             headers: {
@@ -30,8 +30,8 @@ async function createFormResponse(
 
 
 export async function load({ fetch, params }: { fetch: any, params: {formId: FormId} }): Promise<void> {
-    const {formId} = params;
+    const {formId} = params;    
 
     const { id: formResponseId } = await createFormResponse(formId, fetch);
-    redirect(303, `/form-response/${formResponseId}`);
+    redirect(303, `/form-responses/${formResponseId}`);
 }

@@ -8,7 +8,7 @@ export interface Data {
 }
 
 export async function load({ params }: { params: { formResponseId: FormResponseId } }): Promise<Data> {
-    const url = `${BACKEND_ORIGIN}api/form-response/${params.formResponseId}`;
+    const url = `${BACKEND_ORIGIN}api/form-responses/${params.formResponseId}`;
     const response = await fetch(url);
     if (!response.ok) {
         throw error(500, await response.text());

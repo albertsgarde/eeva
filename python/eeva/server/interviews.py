@@ -12,7 +12,7 @@ from eeva.prompt import Prompt
 from ..interview import Interview, Interviewer, Message
 from ..utils import Model, NetworkModel
 from .database import Database
-from .prompt import PromptId
+from .prompts import PromptId
 
 
 class InterviewId(NetworkModel):

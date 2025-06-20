@@ -1,4 +1,4 @@
-import { BACKEND_ORIGIN, type InterviewId, type Message } from "$lib/base";
+import { BACKEND_ORIGIN, expect, type InterviewId, type Message } from "$lib/base";
 import { error } from '@sveltejs/kit';
 
 export interface Interview {
@@ -12,13 +12,12 @@ export async function load({ params }: { params: { interviewId: string } }): Pro
         throw error(404, "Interview index must be a non-negative integer");
     }
 
-    
-    const url = `${BACKEND_ORIGIN}api/interview/${interviewId}`;
+    const url = `${BACKEND_ORIGIN}api/interviews/${interviewId}`;
     const response = await fetch(url);
     if (!response.ok) {
         throw error(500, await response.text());
     }
     const interview: Interview = await response.json();
 
-    return { interviewId: {id: interviewId}, interview: interview }
+    return { interviewId: {id: interviewId}, interview }
 }

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from eeva.utils import Model
 
-from . import form, form_response, interview, prompt, question
+from . import form_responses, forms, interviews, prompts, questions
 from .database import Database
 
 
@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
         database_path = Path(database_path_str).resolve()
 
     database = Database(database_path)
-    prompt.load_default_prompts(database, prompt_dir)
+    prompts.load_default_prompts(database, prompt_dir)
 
     model = Model(
         model_name="gpt-4o-mini",
@@ -41,10 +41,10 @@ def create_app() -> FastAPI:
         """
         return "OK"
 
-    app.include_router(prompt.create_router(database), prefix="/api/prompt")
-    app.include_router(interview.create_router(database, model), prefix="/api/interview")
-    app.include_router(question.create_router(database), prefix="/api/question")
-    app.include_router(form.create_router(database), prefix="/api/form")
-    app.include_router(form_response.create_router(database), prefix="/api/form-response")
+    app.include_router(prompts.create_router(database), prefix="/api/prompts")
+    app.include_router(interviews.create_router(database, model), prefix="/api/interviews")
+    app.include_router(questions.create_router(database), prefix="/api/questions")
+    app.include_router(forms.create_router(database), prefix="/api/forms")
+    app.include_router(form_responses.create_router(database), prefix="/api/form-responses")
 
     return app

@@ -10,7 +10,7 @@
 	async function saveSubjectName() {
 		const oldSubjectName = formResponse.subjectName;
 		formResponse = { ...formResponse, subjectName };
-		const url = `/api/form-response/${formResponseId}/subject-name`;
+		const url = `/api/form-responses/${formResponseId}/subject-name`;
 		await fetch(url, {
 			method: 'PUT',
 			headers: {
@@ -30,13 +30,13 @@
 		const oldResponse = questionResponse.response;
 
 		formResponse.responses[questionIndex] = { ...questionResponse, response: subjectResponse };
-		const url = `/api/form-response/${formResponseId}/question/${questionIndex}`;
+		const url = `/api/form-responses/${formResponseId}/question/${questionIndex}`;
 		await fetch(url, {
 			method: `PUT`,
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(questionResponse)
+			body: JSON.stringify(formResponse.responses[questionIndex])
 		}).then(async (response) => {
 			if (!response.ok) {
 				formResponse.responses[questionIndex] = questionResponse; // revert to old response on error

@@ -14,7 +14,7 @@ async function createInterview(
 	};
 
 	const response: { interviewId: InterviewId; messages: Message[] } = await fetch(
-		`/api/interview`,
+		`/api/interviews`,
 		{
 			method: 'POST',
 			headers: {
