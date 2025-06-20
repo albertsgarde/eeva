@@ -6,11 +6,11 @@ backend *ARGS:
 b *ARGS:
     just backend {{ARGS}}
 
-frontend:
-    npm run --prefix=interview-frontend dev
+frontend HOSTNAME="localhost" PORT="5173":
+    npm run --prefix=interview-frontend dev -- --host={{HOSTNAME}} --port={{PORT}}
 
-f: 
-    just frontend
+f HOSTNAME="localhost" PORT="5173": 
+    just frontend {{HOSTNAME}} {{PORT}}
 
 update:
     git reset --hard
