@@ -4,7 +4,7 @@
 	import type { Data } from './+page.server';
 
 	export let data: Data;
-	let { formResponseId, formResponse } = data;
+	let { formResponseId, formResponse, maxExampleAnswers } = data;
 	let subjectName: string = formResponse.subjectName;
 
 	async function saveSubjectName() {
@@ -52,6 +52,7 @@
 			<FormQuestion
 				{questionResponse}
 				onSave={(response: string) => saveResponse(response, index)}
+				{maxExampleAnswers}
 			/>
 		{/each}
 	</div>
