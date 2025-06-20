@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { QuestionResponse } from './base';
+	import SuccessButton from './ui/SuccessButton.svelte';
 
 	export let questionResponse: QuestionResponse;
 	export let onSave: (response: string) => Promise<void>;
@@ -32,10 +33,6 @@
 	placeholder="Type your answer here..."
 ></textarea>
 
-<button
-	class="mb-4 rounded bg-green-600 px-4 py-2 font-bold text-white hover:bg-green-700 focus:outline-none active:bg-green-800 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
-	onclick={handleSave}
-	disabled={response === questionResponse.response}
->
+<SuccessButton onClick={handleSave} disabled={response === questionResponse.response}>
 	Save
-</button>
+</SuccessButton>
