@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@lucide/svelte": "^0.482.0",
 		"@sveltejs/adapter-node": "^5.2.12",
+		"markdown-it": "^14.1.0",
 		"openai": "^4.87.3",
 		"zod": "^3.25.61"
 	}
