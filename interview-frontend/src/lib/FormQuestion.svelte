@@ -15,19 +15,9 @@
 	let response: string = questionResponse.response;
 </script>
 
-<h2 class="text-xl font-semibold text-gray-100">
+<h2 class="my-2 mt-4 text-xl font-semibold text-gray-100">
 	<Markdown content={questionResponse.question.question} />
 </h2>
-{#each questionResponse.question.exampleAnswers.slice(0, maxExampleAnswers ?? undefined) as example, index}
-	<div
-		class="pointer-events-none cursor-default select-none rounded-lg bg-gray-800 p-2.5 pt-2 text-gray-300"
-	>
-		<div>
-			<p class="text-sm text-gray-400">Example {index + 1}:</p>
-		</div>
-		{example}
-	</div>
-{/each}
 
 <textarea
 	bind:value={response}
@@ -39,3 +29,13 @@
 <SuccessButton onClick={handleSave} disabled={response === questionResponse.response}>
 	Save
 </SuccessButton>
+{#each questionResponse.question.exampleAnswers.slice(0, maxExampleAnswers ?? undefined) as example, index}
+	<div
+		class="pointer-events-none my-3 cursor-default select-none rounded-lg bg-gray-800 text-gray-300"
+	>
+		<div>
+			<p class="text-sm text-gray-400">Example {index + 1}:</p>
+		</div>
+		{example}
+	</div>
+{/each}

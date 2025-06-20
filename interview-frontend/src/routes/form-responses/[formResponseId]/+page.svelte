@@ -46,7 +46,7 @@
 	}
 </script>
 
-<div class="mx-auto flex max-w-2xl flex-col">
+<div class="mx-auto flex max-w-2xl flex-col px-4">
 	<div class="overflow-y-auto p-1">
 		{#each formResponse.responses as questionResponse, index}
 			<FormQuestion
@@ -54,6 +54,7 @@
 				onSave={(response: string) => saveResponse(response, index)}
 				{maxExampleAnswers}
 			/>
+			<hr class="border-slate-600" />
 		{/each}
 	</div>
 </div>
