@@ -123,7 +123,7 @@ class Table(Generic[K, T]):
         cursor = self.connection.cursor()
         cursor.execute(
             f"""
-UPSERT INTO {self.table_name} (id, {self.table_name})
+INSERT INTO {self.table_name} (id, {self.table_name})
 VALUES (:id, :value)
 ON CONFLICT(id) DO UPDATE SET
     {self.table_name} = :value
