@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { QuestionResponse } from './base';
+	import Markdown from './ui/Markdown.svelte';
 	import SuccessButton from './ui/SuccessButton.svelte';
 
 	export let questionResponse: QuestionResponse;
@@ -14,7 +15,9 @@
 	let response: string = questionResponse.response;
 </script>
 
-<h2 class="text-xl font-semibold text-gray-100">{questionResponse.question.question}</h2>
+<h2 class="text-xl font-semibold text-gray-100">
+	<Markdown content={questionResponse.question.question} />
+</h2>
 {#each questionResponse.question.exampleAnswers.slice(0, maxExampleAnswers ?? undefined) as example, index}
 	<div
 		class="pointer-events-none cursor-default select-none rounded-lg bg-gray-800 p-2.5 pt-2 text-gray-300"
