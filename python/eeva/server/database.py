@@ -119,6 +119,21 @@ class Table(Generic[K, T]):
         for callback in self.watchers.get(id, {}).values():
             callback(item)
 
+    def upsert(self, id: K, item: T) -> None:
+        cursor = self.connection.cursor()
+        cursor.execute(
+            f"""
+UPSERT INTO {self.table_name} (id, {self.table_name})
+VALUES (:id, :value)
+ON CONFLICT(id) DO UPDATE SET
+    {self.table_name} = :value
+""",
+            {"id": id, "value": item.model_dump_json()},
+        )
+        self.connection.commit()
+        for callback in self.watchers.get(id, {}).values():
+            callback(item)
+
     def watch(self, id: K, key: int, callback: Callable[[T], None]) -> None:
         """
         Watch for changes to an item and call the callback with the updated item.

@@ -2,9 +2,15 @@ from fastapi import APIRouter, HTTPException
 from pydantic import Field
 
 from eeva.form import Form, FormId
+from eeva.question import QuestionId
 from eeva.utils import NetworkModel
 
 from .database import Database
+
+
+def find_missing_questions(database: Database, form: Form) -> list[QuestionId]:
+    questions = database.questions()
+    return [question_id for question_id in form.questions if not questions.exists(question_id)]
 
 
 def create_router(database: Database) -> APIRouter:
@@ -48,11 +54,13 @@ def create_router(database: Database) -> APIRouter:
     @router.put("/{form_id}")
     def update_form(form_id: FormId, form: Form):
         forms = database.forms()
-        if not forms.exists(form_id):
-            forms.create_with_id(form, form_id)
-            return {"status": "created", "id": form_id}
-        else:
-            forms.update(form_id, form)
-            return {"status": "updated", "id": form_id}
+        missing_questions = find_missing_questions(database, form)
+        if missing_questions != []:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Form contains questions that do not exist: {missing_questions}",
+            )
+        forms.upsert(form_id, form)
+        return {"status": "upserted", "id": form_id}
 
     return router

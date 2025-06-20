@@ -60,20 +60,13 @@ def create_router(database: Database) -> APIRouter:
     def update_questions(request: dict[QuestionId, Question]):
         questions = database.questions()
         for question_id, question in request.items():
-            if questions.exists(question_id):
-                questions.update(question_id, question)
-            else:
-                questions.create_with_id(question, question_id)
-        for id, question in request.items():
-            questions.update(id, question)
-        return {"status": "updated"}
+            questions.upsert(question_id, question)
+        return {"status": "upserted"}
 
     @router.put("/{question_id}")
     def update_question(question_id: QuestionId, question: Question):
         questions = database.questions()
-        if not questions.exists(question_id):
-            raise HTTPException(status_code=404, detail=f"Question '{question_id}' not found")
-        questions.update(question_id, question)
-        return {"status": "updated", "id": question_id}
+        questions.upsert(question_id, question)
+        return {"status": "upserted", "id": question_id}
 
     return router

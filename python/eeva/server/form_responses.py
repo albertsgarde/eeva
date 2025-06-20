@@ -22,12 +22,18 @@ def create_router(database: Database) -> APIRouter:
 
     @router.post("/create-from-form")
     def create_from_form(request: CreateFromFormRequest) -> CreateFromFormResponse:
-        form = database.forms().get(request.form_id)
+        try:
+            form = database.forms().get(request.form_id)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=f"Form '{request.form_id}' not found") from e
         form_responses = database.form_responses()
-        form_questions = [
-            QuestionResponse(question_id=question_id, question=database.questions().get(question_id), response="")
-            for question_id in form.questions
-        ]
+        form_questions = []
+        for question_id in form.questions:
+            try:
+                question = database.questions().get(question_id)
+            except ValueError as e:
+                raise HTTPException(status_code=500, detail=f"Question '{question_id}' not found") from e
+            form_questions.append(QuestionResponse(question_id=question_id, question=question, response=""))
 
         form_response = FormResponse(form_id=request.form_id, responses=form_questions, subject_name="")
         id = form_responses.create(form_response)
@@ -45,9 +51,7 @@ def create_router(database: Database) -> APIRouter:
     @router.put("/{form_response_id}")
     def update_form_response(form_response_id: FormResponseId, form_response: FormResponse):
         form_responses = database.form_responses()
-        if not form_responses.exists(form_response_id):
-            raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found")
-        form_responses.update(form_response_id, form_response)
+        form_responses.upsert(form_response_id, form_response)
         return {"status": "updated", "id": form_response_id}
 
     @router.put("/{form_response_id}/question/{question_index}")
@@ -57,10 +61,12 @@ def create_router(database: Database) -> APIRouter:
         question_response: QuestionResponse,
     ):
         form_responses = database.form_responses()
-        if not form_responses.exists(form_response_id):
-            raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found")
 
-        form_response = form_responses.get(form_response_id)
+        try:
+            form_response = form_responses.get(form_response_id)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found") from e
+
         if question_index >= len(form_response.responses):
             raise HTTPException(status_code=400, detail="Invalid question index")
 
@@ -70,10 +76,12 @@ def create_router(database: Database) -> APIRouter:
     @router.put("/{form_response_id}/subject-name")
     def update_subject_name(form_response_id: FormResponseId, subject_name: Annotated[str, Body()]):
         form_responses = database.form_responses()
-        if not form_responses.exists(form_response_id):
-            raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found")
 
-        form_response = form_responses.get(form_response_id)
+        try:
+            form_response = form_responses.get(form_response_id)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=f"Form response '{form_response_id}' not found") from e
+
         new_form_response = FormResponse(
             form_id=form_response.form_id,
             responses=form_response.responses,
