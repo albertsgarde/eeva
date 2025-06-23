@@ -44,12 +44,12 @@
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
-		<Header2>Please enter your name</Header2>
+		<Header2>Venligst indtast dit navn</Header2>
 
 		<div class="flex">
-			<InputText bind:response={userName} placeholder="Your name" onEnter={handleContinue} />
+			<InputText bind:response={userName} placeholder="Dit navn..." onEnter={handleContinue} />
 
-			<SuccessButton onClick={handleContinue} disabled={!userName.trim()}>Continue</SuccessButton>
+			<SuccessButton onClick={handleContinue} disabled={!userName.trim()}>Fortsæt</SuccessButton>
 		</div>
 	</div>
 </div>
