@@ -94,7 +94,7 @@ export const QuestionResponse = z.object({
     questionId: QuestionId,
     question: Question,
     response: z.string()
-}).readonly();
+});
 
 export type QuestionResponse = z.infer<typeof QuestionResponse>;
 
@@ -102,6 +102,6 @@ export const FormResponse = z.object({
     formId: FormId,
     responses: z.array(QuestionResponse),
     subjectName: z.string()
-}).readonly();
+});
 
 export type FormResponse = z.infer<typeof FormResponse>;

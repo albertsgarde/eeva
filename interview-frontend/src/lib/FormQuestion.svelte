@@ -3,32 +3,24 @@
 	import Header2 from './ui/Header2.svelte';
 	import InputMultiline from './ui/InputTextMultiline.svelte';
 	import Markdown from './ui/Markdown.svelte';
-	import SuccessButton from './ui/SuccessButton.svelte';
 
 	interface Props {
 		questionResponse: QuestionResponse;
-		onSave: (response: string) => Promise<void>;
 		maxExampleAnswers: number | null;
 	}
-	let { questionResponse, onSave, maxExampleAnswers }: Props = $props();
-
-	async function handleSave() {
-		await onSave(response);
-		questionResponse = { ...questionResponse, response };
-	}
-
-	let response: string = $state(questionResponse.response);
+	let { questionResponse = $bindable(), maxExampleAnswers }: Props = $props();
 </script>
 
 <Header2>
 	<Markdown content={questionResponse.question.question} />
 </Header2>
 
-<InputMultiline bind:response numRows={6} placeholder="Dit svar her..." />
+<InputMultiline
+	bind:response={questionResponse.response}
+	numRows={6}
+	placeholder="Dit svar her..."
+/>
 
-<SuccessButton onClick={handleSave} disabled={response === questionResponse.response}>
-	Gem
-</SuccessButton>
 <h3 class="text-l bg-gray-800 font-semibold text-gray-300">Eksempler til inspiration:</h3>
 {#each questionResponse.question.exampleAnswers.slice(0, maxExampleAnswers ?? undefined) as example, index}
 	<div

@@ -2,11 +2,11 @@
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		onClick: () => Promise<void>;
-		disabled: boolean;
+		onClick?: () => Promise<void>;
+		disabled?: boolean;
 		children: Snippet;
 	}
-	let { onClick, disabled = false, children }: Props = $props();
+	let { onClick = async () => {}, disabled = false, children }: Props = $props();
 </script>
 
 <button

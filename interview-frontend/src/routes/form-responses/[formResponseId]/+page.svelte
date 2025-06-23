@@ -1,60 +1,42 @@
 <script lang="ts">
-	import type { QuestionResponse } from '$lib/base';
+	import { goto } from '$app/navigation';
 	import FormQuestion from '$lib/FormQuestion.svelte';
+	import SuccessButton from '$lib/ui/SuccessButton.svelte';
 	import type { Data } from './+page.server';
 
-	export let data: Data;
-	let { formResponseId, formResponse, maxExampleAnswers } = data;
-	let subjectName: string = formResponse.subjectName;
-
-	async function saveSubjectName() {
-		const oldSubjectName = formResponse.subjectName;
-		formResponse = { ...formResponse, subjectName };
-		const url = `/api/form-responses/${formResponseId}/subject-name`;
-		await fetch(url, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(formResponse.subjectName)
-		}).then(async (response) => {
-			if (!response.ok) {
-				formResponse = { ...formResponse, subjectName: oldSubjectName };
-				throw new Error('Network response was not ok: ' + (await response.text()));
-			}
-		});
+	interface Props {
+		data: Data;
 	}
+	let { data }: Props = $props();
+	let { formResponseId, formResponse: initialFormResponse, maxExampleAnswers } = data;
+	let formResponse = $state(structuredClone(initialFormResponse));
 
-	async function saveResponse(subjectResponse: string, questionIndex: number) {
-		let questionResponse: QuestionResponse = formResponse.responses[questionIndex];
-		const oldResponse = questionResponse.response;
-
-		formResponse.responses[questionIndex] = { ...questionResponse, response: subjectResponse };
-		const url = `/api/form-responses/${formResponseId}/question/${questionIndex}`;
+	async function submit() {
+		const url = `/api/form-responses/${formResponseId}`;
 		await fetch(url, {
 			method: `PUT`,
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(formResponse.responses[questionIndex])
+			body: JSON.stringify(formResponse)
 		}).then(async (response) => {
 			if (!response.ok) {
-				formResponse.responses[questionIndex] = questionResponse; // revert to old response on error
 				throw new Error('Network response was not ok: ' + (await response.text()));
 			}
+			goto(`/form-responses/${formResponseId}/completed`);
 		});
 	}
 </script>
 
 <div class="mx-auto flex max-w-2xl flex-col">
-	<div class="overflow-y-auto p-1">
+	<div class="overflow-y-auto overflow-x-hidden p-1">
 		{#each formResponse.responses as questionResponse, index}
-			<FormQuestion
-				{questionResponse}
-				onSave={(response: string) => saveResponse(response, index)}
-				{maxExampleAnswers}
-			/>
+			<FormQuestion bind:questionResponse={formResponse.responses[index]} {maxExampleAnswers} />
 			<hr class="border-slate-600" />
 		{/each}
+		<div class="h-4"></div>
+		<div class="flex items-center justify-end">
+			<SuccessButton onClick={submit}>Submit</SuccessButton>
+		</div>
 	</div>
 </div>
