@@ -1,6 +1,9 @@
 <script lang="ts">
 	import MarkdownIt from 'markdown-it';
-	export let content: string;
+	interface Props {
+		content: string;
+	}
+	let { content }: Props = $props();
 
 	const md = new MarkdownIt();
 </script>

@@ -1,4 +1,10 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
+	interface Props {
+		children: Snippet;
+	}
+	let { children }: Props = $props();
 </script>
 
 <div class="flex h-dvh items-center justify-center p-4">
@@ -7,6 +13,6 @@
 		<div class="rounded-t-lg bg-blue-600 p-4 text-white">
 			<h1 class="text-xl font-bold">Eeva</h1>
 		</div>
-		<slot />
+		{@render children()}
 	</div>
 </div>

@@ -1,1 +1,10 @@
 @import 'tailwindcss';
+@tailwind base;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-800;
+}
+html {
+  @apply bg-gray-800;
+}

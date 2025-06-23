@@ -2,17 +2,19 @@
 	import type { Message } from './base';
 	import MessageBubble from './MessageBubble.svelte';
 
-	export let messages: Message[];
-	export let subjectName: string;
-	export let activeUntil: number = -1;
+	interface Props {
+		messages: Message[];
+		subjectName: string;
+		activeUntil?: number;
+		onBubbleClick?: (index: number) => void;
+	}
+	let { messages, subjectName, activeUntil = -1, onBubbleClick = (index) => {} }: Props = $props();
 
 	let chatDiv: HTMLElement;
 
 	export function scrollToBottom(behavior?: 'auto' | 'instant' | 'smooth') {
 		chatDiv.scrollTo({ top: chatDiv.scrollHeight, behavior });
 	}
-
-	export let onBubbleClick: (index: number) => void = (index: number) => {};
 </script>
 
 <!-- Chat Messages Container -->

@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { Message } from './base';
 
-	export let message: Message;
-	export let subjectName: string;
-	export let active: boolean = true;
-
-	export let onClick: () => void = () => {};
+	interface Props {
+		message: Message;
+		subjectName: string;
+		active?: boolean;
+		onClick?: () => void;
+	}
+	let { message, subjectName, active = true, onClick = () => {} }: Props = $props();
 </script>
 
 {#if message.interviewer === false}

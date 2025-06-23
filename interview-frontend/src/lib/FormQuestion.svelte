@@ -1,30 +1,30 @@
 <script lang="ts">
 	import type { QuestionResponse } from './base';
+	import Header2 from './ui/Header2.svelte';
+	import InputMultiline from './ui/InputTextMultiline.svelte';
 	import Markdown from './ui/Markdown.svelte';
 	import SuccessButton from './ui/SuccessButton.svelte';
 
-	export let questionResponse: QuestionResponse;
-	export let onSave: (response: string) => Promise<void>;
-	export let maxExampleAnswers: number | null = null;
+	interface Props {
+		questionResponse: QuestionResponse;
+		onSave: (response: string) => Promise<void>;
+		maxExampleAnswers: number | null;
+	}
+	let { questionResponse, onSave, maxExampleAnswers }: Props = $props();
 
 	async function handleSave() {
 		await onSave(response);
 		questionResponse = { ...questionResponse, response };
 	}
 
-	let response: string = questionResponse.response;
+	let response: string = $state(questionResponse.response);
 </script>
 
-<h2 class="my-2 mt-4 text-xl font-semibold text-gray-100">
+<Header2>
 	<Markdown content={questionResponse.question.question} />
-</h2>
+</Header2>
 
-<textarea
-	bind:value={response}
-	class="my-1 w-full resize-none rounded-lg border border-gray-600 bg-gray-700 p-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-	rows="6"
-	placeholder="Type your answer here..."
-></textarea>
+<InputMultiline bind:response numRows={6} placeholder="Type your answer here..." />
 
 <SuccessButton onClick={handleSave} disabled={response === questionResponse.response}>
 	Save

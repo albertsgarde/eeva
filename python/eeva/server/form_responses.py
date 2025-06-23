@@ -15,6 +15,7 @@ def create_router(database: Database) -> APIRouter:
 
     class CreateFromFormRequest(NetworkModel):
         form_id: FormId = Field()
+        subject_name: str = Field()
 
     class CreateFromFormResponse(NetworkModel):
         id: FormResponseId = Field()
@@ -35,7 +36,9 @@ def create_router(database: Database) -> APIRouter:
                 raise HTTPException(status_code=500, detail=f"Question '{question_id}' not found") from e
             form_questions.append(QuestionResponse(question_id=question_id, question=question, response=""))
 
-        form_response = FormResponse(form_id=request.form_id, responses=form_questions, subject_name="")
+        form_response = FormResponse(
+            form_id=request.form_id, responses=form_questions, subject_name=request.subject_name
+        )
         id = form_responses.create(form_response)
         return CreateFromFormResponse(id=id, form_response=form_response)
 

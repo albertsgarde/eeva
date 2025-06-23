@@ -1,7 +1,12 @@
 <script lang="ts">
 	import IconSend from '@lucide/svelte/icons/send-horizontal';
 
-	let currentMessage: string = '';
+	interface Props {
+		sendMessage: (message: string) => Promise<void>;
+	}
+	let { sendMessage }: Props = $props();
+
+	let currentMessage: string = $state('');
 
 	function onPromptKeydown(event: KeyboardEvent) {
 		if (['Enter'].includes(event.code)) {
@@ -16,8 +21,6 @@
 			currentMessage = '';
 		}
 	}
-
-	export let sendMessage: (message: string) => Promise<void>;
 </script>
 
 <div class="border-t p-4">

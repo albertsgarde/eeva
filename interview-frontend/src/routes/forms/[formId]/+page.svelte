@@ -1,0 +1,55 @@
+<script lang="ts">
+	import type { FormResponseId } from '$lib/base';
+	import Header2 from '$lib/ui/Header2.svelte';
+	import InputText from '$lib/ui/InputText.svelte';
+	import SuccessButton from '$lib/ui/SuccessButton.svelte';
+	import type { Data } from './+page.server';
+	import { goto } from '$app/navigation';
+
+	interface Props {
+		data: Data;
+	}
+	let { data }: Props = $props();
+	let { formId } = data;
+
+	// State to store the user's name
+	let userName: string = $state('');
+
+	// Function to handle form submission
+	async function handleContinue(): Promise<void> {
+		const createFormResponseRequest = {
+			formId,
+			subjectName: userName.trim()
+		};
+
+		const { id: formResponseId }: { id: FormResponseId } = await fetch(
+			`/api/form-responses/create-from-form`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(createFormResponseRequest)
+			}
+		).then(async (response) => {
+			if (response.status !== 200) {
+				const responseText = await response.text();
+				throw new Error('Failed to create form response: ' + responseText);
+			}
+			return response.json();
+		});
+		goto(`/form-responses/${formResponseId}`);
+	}
+</script>
+
+<div class="flex h-dvh items-center justify-center">
+	<div class="mx-auto max-w-2xl px-4">
+		<Header2>Please enter your name</Header2>
+
+		<div class="flex">
+			<InputText bind:response={userName} placeholder="Your name" onEnter={handleContinue} />
+
+			<SuccessButton onClick={handleContinue} disabled={!userName.trim()}>Continue</SuccessButton>
+		</div>
+	</div>
+</div>
