@@ -1,36 +1,50 @@
 ---
 steps:
-    - name: 'gcr.io/cloud-builders/docker'
-      args: ['compose', '-f', 'docker/compose.yaml', 'build']
-      env:
-          - 'PROMPT_DIR=prompts/'
-          - 'DATABASE_PATH=data/db.sqlite'
-    - name: 'gcr.io/cloud-builders/docker'
-      args: ['tag', 'eeva-frontend', 'gcr.io/eeva-460211/eeva-frontend']
-    - name: 'gcr.io/cloud-builders/docker'
-      args: ['tag', 'eeva-backend', 'gcr.io/eeva-460211/eeva-backend']
-    - name: 'gcr.io/cloud-builders/docker'
-      args: ['push', 'gcr.io/eeva-460211/eeva-frontend']
-    - name: 'gcr.io/cloud-builders/docker'
-      args: ['push', 'gcr.io/eeva-460211/eeva-backend']
-    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-      entrypoint: 'gcloud'
-      args: ['run', 'deploy', 'eeva-cd', '--region=europe-west4', '--service-account=cd-builder@eeva-460211.iam.gserviceaccount.com',
-          '--add-volume=name=prompts,type=cloud-storage,bucket=eeva-prompts',
-          '--add-volume=name=data,type=cloud-storage,bucket=eeva-data',
-          '--container=eeva-frontend', '--image=gcr.io/eeva-460211/eeva-frontend', '--port=3000',
-            '--set-env-vars=BACKEND_ORIGIN=http://localhost:8000',
-            '--depends-on=eeva-backend',
-          '--container=eeva-backend', '--image=gcr.io/eeva-460211/eeva-backend', '--startup-probe', 'httpGet.path=/ready,httpGet.port=8000,initialDelaySeconds=20,failureThreshold=10',
-            '--add-volume-mount=volume=prompts,mount-path=/prompts',
-            '--add-volume-mount=volume=data,mount-path=/data',
-            '--update-secrets=OPENAI_API_KEY=openai-prod-key:1',]
-      secretEnv: ['OPENAI_API_KEY']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["compose", "-f", "docker/compose.yaml", "build"]
+    env:
+      - "PROMPT_DIR=prompts/"
+      - "DATABASE_PATH=data/db.sqlite"
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["tag", "eeva-frontend", "gcr.io/eeva-460211/eeva-frontend"]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["tag", "eeva-backend", "gcr.io/eeva-460211/eeva-backend"]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/eeva-460211/eeva-frontend"]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/eeva-460211/eeva-backend"]
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "eeva-cd",
+        "--region=europe-west4",
+        "--service-account=cd-builder@eeva-460211.iam.gserviceaccount.com",
+        "--min-instances=1",
+        "--concurrency=80",
+        "--add-volume=name=prompts,type=cloud-storage,bucket=eeva-prompts",
+        "--add-volume=name=data,type=cloud-storage,bucket=eeva-data",
+        "--container=eeva-frontend",
+        "--image=gcr.io/eeva-460211/eeva-frontend",
+        "--port=3000",
+        "--set-env-vars=BACKEND_ORIGIN=http://localhost:8000",
+        "--depends-on=eeva-backend",
+        "--container=eeva-backend",
+        "--image=gcr.io/eeva-460211/eeva-backend",
+        "--startup-probe",
+        "httpGet.path=/ready,httpGet.port=8000,initialDelaySeconds=20,failureThreshold=10",
+        "--add-volume-mount=volume=prompts,mount-path=/prompts",
+        "--add-volume-mount=volume=data,mount-path=/data",
+        "--update-secrets=OPENAI_API_KEY=openai-prod-key:1",
+      ]
+    secretEnv: ["OPENAI_API_KEY"]
 availableSecrets:
   secretManager:
-  - versionName: projects/eeva-460211/secrets/openai-prod-key/versions/1
-    env: 'OPENAI_API_KEY'
-logsBucket: 'gs://eeva-logs'
-serviceAccount: 'projects/eeva-460211/serviceAccounts/cd-builder@eeva-460211.iam.gserviceaccount.com'
+    - versionName: projects/eeva-460211/secrets/openai-prod-key/versions/1
+      env: "OPENAI_API_KEY"
+logsBucket: "gs://eeva-logs"
+serviceAccount: "projects/eeva-460211/serviceAccounts/cd-builder@eeva-460211.iam.gserviceaccount.com"
 options:
-    logging: 'GCS_ONLY'
+  logging: "GCS_ONLY"
