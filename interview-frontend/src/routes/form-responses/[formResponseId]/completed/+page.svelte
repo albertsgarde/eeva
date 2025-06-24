@@ -12,17 +12,18 @@
 	const { data }: Props = $props();
 	const { formResponseId } = data;
 
-	let origin = $derived(() => {
+	let host = $derived(() => {
 		if (browser) {
-			return location.origin;
+			return location.host;
 		} else {
 			return '';
 		}
 	});
 
+	const link = $derived(() => `${host()}/form-responses/${formResponseId}`);
+
 	async function copyLink() {
-		const url = `${origin()}/form-responses/${formResponseId}`;
-		await navigator.clipboard.writeText(url);
+		await navigator.clipboard.writeText(link());
 	}
 </script>
 
@@ -31,9 +32,10 @@
 		<Header2>{m['page.formResponses/completed.title']()}</Header2>
 		<P>
 			{m['page.formResponses/completed.description']({
-				url: `${origin()}/form-responses/${formResponseId}`
+				url: `${host()}/form-responses/${formResponseId}`
 			})}
 		</P>
 		<SuccessButton onClick={copyLink}>{m[`page.formResponses/completed.copyLink`]()}</SuccessButton>
+		<a class="text-xs" href={link()}>{link()}</a>
 	</div>
 </div>
