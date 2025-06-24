@@ -50,6 +50,7 @@
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
+		<P>{m['page.forms.pitch']()}</P>
 		<Header2>{m['page.forms.pleaseInputName']()}</Header2>
 
 		<div class="flex">
