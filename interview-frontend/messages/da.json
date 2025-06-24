@@ -1,0 +1,28 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "submit": "Indsend",
+  "component": {
+    "formQuestion": {
+      "examplesHeader": "Eksempler til inspiration:",
+      "exampleHeader": "Eksempel {index}",
+      "inputPlaceholder": "Dit svar her...",
+      "responsePlaceholder": "Dit svar her..."
+    }
+  },
+  "common": {
+    "submit": "Indsend"
+  },
+  "page": {
+    "formResponses/completed": {
+      "title": "Tusind tak!",
+      "description": "Din besvarelse er blevet gemt. Hvis du senere ønsker at ændre din besvarelse, kan du benytte linket nedenfor.",
+      "copyLink": "Kopier link"
+    },
+    "forms": {
+      "pleaseInputName": "Indtast dit navn for at fortsætte",
+      "pitch": "We need your help! (And you might get an invite you to a small hangout where we provide a bit of beer/wine/snacks)\nWe, Abel and Albert, are building a dating app we think will actually work. It will make it possible to consistently find people where conversation will be fun and engaging instead of impersonal and alienating. And you won’t even have to swipe endlessly to find them. For us to succeed we need you. We really want to see how you use and interact with our current setup so that we can improve it.\n\nWe think the current version is already useful for matching like minded people, so we will host a small hangout with 5-6 of the participants that we expect will enjoy each other's company. You might even encounter a new friend or two.\nInvitations will go out only based on the questionnaire answers. If you get an invitation you are of course very welcome to decline, but keep in mind that we invited you specifically because we think you would fit in and have a great time with the other attendees.\n\nSo if you could take 5-8 minutes out of your day to try and answer the 5 questions in the following link, that would be super helpful <3. The answers just need to feel true to yourself. We're looking for answers that have about the same length as the examples. Longer would be slightly better and shorter is still a lot better than nothing.",
+      "namePlaceholder": "Dit navn...",
+      "title": "TITLE!!!"
+    }
+  }
+}

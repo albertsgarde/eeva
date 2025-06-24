@@ -3,6 +3,8 @@
 	import P from '$lib/ui/P.svelte';
 	import SuccessButton from '$lib/ui/SuccessButton.svelte';
 	import type { Data } from './+page.server';
+	import { m } from '$loc/messages.js';
+	import { browser } from '$app/environment';
 
 	interface Props {
 		data: Data;
@@ -10,19 +12,28 @@
 	const { data }: Props = $props();
 	const { formResponseId } = data;
 
+	let origin = $derived(() => {
+		if (browser) {
+			return location.origin;
+		} else {
+			return '';
+		}
+	});
+
 	async function copyLink() {
-		const url = `${location.origin}/form-responses/${formResponseId}`;
+		const url = `${origin()}/form-responses/${formResponseId}`;
 		await navigator.clipboard.writeText(url);
 	}
 </script>
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto flex max-w-xl flex-col items-center px-4 text-center">
-		<Header2>Tusind tak!</Header2>
+		<Header2>{m['page.formResponses/completed.title']()}</Header2>
 		<P>
-			Din besvarelse er blevet gemt. Hvis du senere ønsker at ændre din besvarelse, kan du benytte
-			linket nedenfor.
+			{m['page.formResponses/completed.description']({
+				url: `${origin()}/form-responses/${formResponseId}`
+			})}
 		</P>
-		<SuccessButton onClick={copyLink}>Kopier link</SuccessButton>
+		<SuccessButton onClick={copyLink}>{m[`page.formResponses/completed.copyLink`]()}</SuccessButton>
 	</div>
 </div>

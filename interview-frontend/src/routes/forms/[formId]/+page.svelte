@@ -6,6 +6,9 @@
 	import type { Data } from './+page.server';
 	import { goto } from '$app/navigation';
 
+	import { m } from '$loc/messages.js';
+	import P from '$lib/ui/P.svelte';
+
 	interface Props {
 		data: Data;
 	}
@@ -44,10 +47,14 @@
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
-		<Header2>Venligst indtast dit navn</Header2>
+		<Header2>{m['page.forms.pleaseInputName']()}</Header2>
 
 		<div class="flex">
-			<InputText bind:response={userName} placeholder="Dit navn..." onEnter={handleContinue} />
+			<InputText
+				bind:response={userName}
+				placeholder={m['page.forms.namePlaceholder']()}
+				onEnter={handleContinue}
+			/>
 
 			<SuccessButton onClick={handleContinue} disabled={!userName.trim()}>Fortsæt</SuccessButton>
 		</div>

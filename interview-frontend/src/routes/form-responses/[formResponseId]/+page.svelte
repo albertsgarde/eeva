@@ -3,6 +3,7 @@
 	import FormQuestion from '$lib/FormQuestion.svelte';
 	import SuccessButton from '$lib/ui/SuccessButton.svelte';
 	import type { Data } from './+page.server';
+	import { m } from '$loc/messages.js';
 
 	interface Props {
 		data: Data;
@@ -36,7 +37,7 @@
 		{/each}
 		<div class="h-4"></div>
 		<div class="flex items-center justify-end">
-			<SuccessButton onClick={submit}>Submit</SuccessButton>
+			<SuccessButton onClick={submit}>{m.submit()}</SuccessButton>
 		</div>
 	</div>
 </div>
