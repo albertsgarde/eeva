@@ -12,8 +12,11 @@
 	let { formResponseId, formResponse: initialFormResponse, maxExampleAnswers } = data;
 	let formResponse = $state(structuredClone(initialFormResponse));
 
+	let continuing: boolean = $state(false);
+
 	async function submit() {
 		const url = `/api/form-responses/${formResponseId}`;
+		continuing = true;
 		await fetch(url, {
 			method: `PUT`,
 			headers: {
@@ -22,6 +25,7 @@
 			body: JSON.stringify(formResponse)
 		}).then(async (response) => {
 			if (!response.ok) {
+				continuing = false;
 				throw new Error('Network response was not ok: ' + (await response.text()));
 			}
 			goto(`/form-responses/${formResponseId}/completed`);
@@ -37,7 +41,7 @@
 		{/each}
 		<div class="h-4"></div>
 		<div class="flex items-center justify-end">
-			<SuccessButton onClick={submit}>{m.submit()}</SuccessButton>
+			<SuccessButton onClick={submit} processing={continuing}>{m.submit()}</SuccessButton>
 		</div>
 	</div>
 </div>

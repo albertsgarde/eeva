@@ -59,28 +59,9 @@
 				placeholder={m['page.forms.namePlaceholder']()}
 				onEnter={handleContinue}
 			/>
-
-			<SuccessButton onClick={handleContinue} disabled={!userName.trim() || continuing}
-				>{#if continuing}
-					<!-- Tailwind’s animate-spin does the rotating -->
-					<svg
-						class="h-5 w-5 animate-spin"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-					>
-						<!-- ghost ring -->
-						<circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
-						<!-- arc -->
-						<path d="M22 12a10 10 0 0 1-10 10" stroke-linecap="round" />
-					</svg>
-					<span class="sr-only">Loading…</span>
-					<!-- screen-reader hint -->
-				{:else}
-					{m['page.forms.continue']()}
-				{/if}</SuccessButton
-			>
+			<SuccessButton onClick={handleContinue} disabled={!userName.trim()} processing={continuing}>
+				{m['page.forms.continue']()}
+			</SuccessButton>
 		</div>
 	</div>
 </div>
