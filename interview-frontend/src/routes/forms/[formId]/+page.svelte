@@ -7,7 +7,6 @@
 	import { goto } from '$app/navigation';
 
 	import { m } from '$loc/messages.js';
-	import { navigating } from '$app/state';
 
 	interface Props {
 		data: Data;

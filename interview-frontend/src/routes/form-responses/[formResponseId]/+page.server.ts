@@ -1,4 +1,4 @@
-import { BACKEND_ORIGIN, expect, FormResponseId, ID_PATTERN, QuestionId, type FormResponse, type Question } from "$lib/base";
+import { BACKEND_ORIGIN, FormResponseId, type FormResponse } from "$lib/base";
 import { error } from '@sveltejs/kit';
 
 
