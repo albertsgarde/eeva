@@ -21,6 +21,12 @@ def create_router(database: Database) -> APIRouter:
         id: FormResponseId = Field()
         form_response: FormResponse = Field()
 
+    @router.get("")
+    def get_all_form_responses() -> dict[FormResponseId, FormResponse]:
+        form_responses = database.form_responses()
+        all_responses = form_responses.get_all()
+        return {id: response for id, response in all_responses}
+
     @router.post("/create-from-form")
     def create_from_form(request: CreateFromFormRequest) -> CreateFromFormResponse:
         try:
