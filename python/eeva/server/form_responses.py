@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException
@@ -43,7 +44,11 @@ def create_router(database: Database) -> APIRouter:
             form_questions.append(QuestionResponse(question_id=question_id, question=question, response=""))
 
         form_response = FormResponse(
-            form_id=request.form_id, responses=form_questions, subject_name=request.subject_name
+            form_id=request.form_id,
+            responses=form_questions,
+            subject_name=request.subject_name,
+            created_at=datetime.now(),
+            modified_at=datetime.now(),
         )
         id = form_responses.create(form_response)
         return CreateFromFormResponse(id=id, form_response=form_response)
@@ -60,6 +65,13 @@ def create_router(database: Database) -> APIRouter:
     @router.put("/{form_response_id}")
     def update_form_response(form_response_id: FormResponseId, form_response: FormResponse):
         form_responses = database.form_responses()
+        form_response = FormResponse(
+            form_id=form_response.form_id,
+            responses=form_response.responses,
+            subject_name=form_response.subject_name,
+            created_at=form_response.created_at,
+            modified_at=datetime.now(),
+        )
         form_responses.upsert(form_response_id, form_response)
         return {"status": "updated", "id": form_response_id}
 
@@ -79,8 +91,16 @@ def create_router(database: Database) -> APIRouter:
         if question_index >= len(form_response.responses):
             raise HTTPException(status_code=400, detail="Invalid question index")
 
-        form_response.responses[question_index] = question_response
-        form_responses.update(form_response_id, form_response)
+        new_responses = form_response.responses
+        new_responses[question_index] = question_response
+        new_form_response = FormResponse(
+            form_id=form_response.form_id,
+            responses=new_responses,
+            subject_name=form_response.subject_name,
+            created_at=form_response.created_at,
+            modified_at=datetime.now(),
+        )
+        form_responses.update(form_response_id, new_form_response)
 
     @router.put("/{form_response_id}/subject-name")
     def update_subject_name(form_response_id: FormResponseId, subject_name: Annotated[str, Body()]):
@@ -95,6 +115,8 @@ def create_router(database: Database) -> APIRouter:
             form_id=form_response.form_id,
             responses=form_response.responses,
             subject_name=subject_name,
+            created_at=form_response.created_at,
+            modified_at=datetime.now(),
         )
         form_responses.update(form_response_id, new_form_response)
         return {"status": "updated", "id": form_response_id}

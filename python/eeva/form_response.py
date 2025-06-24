@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import Field
@@ -19,3 +20,5 @@ class FormResponse(NetworkModel):
     form_id: FormId = Field()
     responses: list[QuestionResponse]
     subject_name: str = Field()
+    created_at: datetime = Field(default=datetime.now())
+    modified_at: datetime = Field(default=datetime.now())
