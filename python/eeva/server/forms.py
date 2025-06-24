@@ -25,7 +25,7 @@ def create_router(database: Database) -> APIRouter:
         return {"status": "created", "id": form_id}
 
     @router.get("/{form_id}")
-    def get_form(form_id: FormId):
+    def get_form(form_id: FormId) -> Form:
         forms = database.forms()
         try:
             form = forms.get(form_id)
@@ -38,7 +38,7 @@ def create_router(database: Database) -> APIRouter:
         form: Form = Field()
 
     @router.get("")
-    def get_all_forms():
+    def get_all_forms() -> list[GetFormResponse]:
         forms = database.forms()
         all_forms = forms.get_all()
         return [GetFormResponse(id=id, form=form) for id, form in all_forms]
