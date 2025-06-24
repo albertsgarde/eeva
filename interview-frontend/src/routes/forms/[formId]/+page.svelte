@@ -78,7 +78,7 @@
 					<span class="sr-only">Loading…</span>
 					<!-- screen-reader hint -->
 				{:else}
-					Fortsæt
+					{m['page.forms.continue']()}
 				{/if}</SuccessButton
 			>
 		</div>
