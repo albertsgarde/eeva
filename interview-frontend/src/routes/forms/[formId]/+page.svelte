@@ -1,12 +1,17 @@
 <script lang="ts">
 	import type { FormResponseId } from '$lib/base';
-	import Header2 from '$lib/ui/Header2.svelte';
+	import Title from '$lib/ui/Title.svelte';
 	import InputText from '$lib/ui/InputText.svelte';
 	import SuccessButton from '$lib/ui/SuccessButton.svelte';
 	import type { Data } from './+page.server';
 	import { goto } from '$app/navigation';
 
 	import { m } from '$loc/messages.js';
+	import P from '$lib/ui/P.svelte';
+	import Header2 from '$lib/ui/Header2.svelte';
+	import Subtitle from '$lib/ui/Subtitle.svelte';
+	import PSmall from '$lib/ui/PSmall.svelte';
+	import Markdown from '$lib/ui/Markdown.svelte';
 
 	interface Props {
 		data: Data;
@@ -50,7 +55,11 @@
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
-		<P>{m['page.forms.pitch']()}</P>
+		<Title>{m['page.forms.title']()}</Title>
+		<div class="h-1"></div>
+		<Subtitle>{m['page.forms.subtitle']()}</Subtitle>
+		<div class="h-2"></div>
+		<P><Markdown content={m['page.forms.pitch']()} /></P>
 		<Header2>{m['page.forms.pleaseInputName']()}</Header2>
 
 		<div class="flex">
@@ -63,5 +72,10 @@
 				{m['page.forms.continue']()}
 			</SuccessButton>
 		</div>
+		<div class="h-2"></div>
+		<details class="rounded p-4">
+			<summary class="cursor-pointer select-none font-medium">Om produktet</summary>
+			{m['page.forms.aboutTheApp']()}
+		</details>
 	</div>
 </div>

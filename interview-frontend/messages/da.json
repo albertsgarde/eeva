@@ -1,29 +1,32 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format",
-  "submit": "Indsend",
-  "component": {
-    "formQuestion": {
-      "examplesHeader": "Eksempler til inspiration:",
-      "exampleHeader": "Eksempel {index}",
-      "inputPlaceholder": "Dit svar her...",
-      "responsePlaceholder": "Dit svar her..."
-    }
-  },
-  "common": {
-    "submit": "Indsend"
-  },
-  "page": {
-    "formResponses/completed": {
-      "title": "Tusind tak!",
-      "description": "Din besvarelse er blevet gemt. Hvis du senere ønsker at ændre din besvarelse, kan du benytte linket nedenfor.",
-      "copyLink": "Kopier link"
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "submit": "Indsend",
+    "component": {
+        "formQuestion": {
+            "examplesHeader": "Eksempler til inspiration:",
+            "exampleHeader": "Eksempel {index}",
+            "inputPlaceholder": "Dit svar her...",
+            "responsePlaceholder": "Dit svar her..."
+        }
     },
-    "forms": {
-      "pleaseInputName": "Indtast dit navn for at fortsætte",
-      "pitch": "We need your help! (And you might get an invite you to a small hangout where we provide a bit of beer/wine/snacks)\nWe, Abel and Albert, are building a dating app we think will actually work. It will make it possible to consistently find people where conversation will be fun and engaging instead of impersonal and alienating. And you won’t even have to swipe endlessly to find them. For us to succeed we need you. We really want to see how you use and interact with our current setup so that we can improve it.\n\nWe think the current version is already useful for matching like minded people, so we will host a small hangout with 5-6 of the participants that we expect will enjoy each other's company. You might even encounter a new friend or two.\nInvitations will go out only based on the questionnaire answers. If you get an invitation you are of course very welcome to decline, but keep in mind that we invited you specifically because we think you would fit in and have a great time with the other attendees.\n\nSo if you could take 5-8 minutes out of your day to try and answer the 5 questions in the following link, that would be super helpful <3. The answers just need to feel true to yourself. We're looking for answers that have about the same length as the examples. Longer would be slightly better and shorter is still a lot better than nothing.",
-      "namePlaceholder": "Dit navn...",
-      "title": "TITLE!!!",
-      "continue": "Fortsæt"
+    "common": {
+        "submit": "Indsend"
+    },
+    "page": {
+        "formResponses/completed": {
+            "title": "Tusind tak!",
+            "description": "Din besvarelse er blevet gemt. Hvis du senere ønsker at ændre din besvarelse, kan du benytte linket nedenfor.",
+            "copyLink": "Kopier link"
+        },
+        "forms": {
+            "pleaseInputName": "Indtast dit navn for at fortsætte",
+            "pitch": "Men vi har brug for din hjælp! Svar på 5 spørgsmål, og måske inviterer vi dig til et venne-hangout med 5-6 mennesker vi har valgt, specielt fordi I passer godt sammen. \n\nVi, Abel og Albert, bygger en dating app vi faktisk tror kan virke. Vi måler en væsentlig sandhed om folk, som indtil videre ikke er blevet målt i personlighedstests. Vi tror allerede nu, at vores app kan forudsige kompatibilitet.\n\nDerfor vil vi gerne invitere 5-6 af jer til et lille hangout med lidt snacks, drikkevare og gode snakke. Vi tjekker kun om I kan lide hinandens selskab, så der er ingen selektion på baggrund af køn eller forholdsstatus. Invitationerne bliver sendt ud udelukkende på baggrund af jeres besvarelser. Hvis du får en invitation er du selvfølgelig meget velkommen til at takke nej, men overvej at vi specifikt har inviteret dig fordi vi tror du vil trives i de andre deltageres selskab. Det kan endda være at du møder en ny ven eller to?\nSå hvis du kunne bruge 5-8 minutter af din dag på at besvare de 5 spørgsmål, ville det være en kæmpe stor hjælp. <3\n",
+            "namePlaceholder": "Dit navn...",
+            "title": "Online dating sutter, vi har en løsning",
+            "continue": "Fortsæt",
+            "subtitle": "But we need your help! And you might get an invite to a small evening hangout?",
+            "subpitch": "",
+            "aboutTheApp": "This dating app will make it possible to consistently find people where conversation will be fun and engaging instead of impersonal and alienating. And you won’t even have to swipe endlessly to find them. For us to succeed we need you. We really want to see how you use and interact with our current setup so that we can improve it."
+        }
     }
-  }
 }
