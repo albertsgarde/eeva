@@ -8,8 +8,9 @@
 	interface Props {
 		questionResponse: QuestionResponse;
 		maxExampleAnswers: number | null;
+		onChange?: (event: Event) => void;
 	}
-	let { questionResponse = $bindable(), maxExampleAnswers }: Props = $props();
+	let { questionResponse = $bindable(), maxExampleAnswers, onChange }: Props = $props();
 </script>
 
 <Header2>
@@ -18,6 +19,7 @@
 
 <InputMultiline
 	bind:response={questionResponse.response}
+	{onChange}
 	numRows={6}
 	placeholder={m['component.formQuestion.responsePlaceholder']()}
 />

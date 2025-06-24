@@ -4,6 +4,8 @@
 	import SuccessButton from '$lib/ui/SuccessButton.svelte';
 	import type { Data } from './+page.server';
 	import { m } from '$loc/messages.js';
+	import { FormResponse } from '$lib/base';
+	import { debounce } from 'lodash-es';
 
 	interface Props {
 		data: Data;
@@ -14,9 +16,8 @@
 
 	let continuing: boolean = $state(false);
 
-	async function submit() {
+	async function saveToBackend(formResponse: FormResponse) {
 		const url = `/api/form-responses/${formResponseId}`;
-		continuing = true;
 		await fetch(url, {
 			method: `PUT`,
 			headers: {
@@ -28,15 +29,29 @@
 				continuing = false;
 				throw new Error('Network response was not ok: ' + (await response.text()));
 			}
+		});
+	}
+
+	async function submit() {
+		continuing = true;
+		await saveToBackend(formResponse).then(() => {
 			goto(`/form-responses/${formResponseId}/completed`);
 		});
 	}
+
+	const debouncedSave = debounce(saveToBackend, 1000);
 </script>
 
 <div class="mx-auto flex max-w-2xl flex-col">
 	<div class="overflow-y-auto overflow-x-hidden p-1">
 		{#each formResponse.responses as questionResponse, index}
-			<FormQuestion bind:questionResponse={formResponse.responses[index]} {maxExampleAnswers} />
+			<FormQuestion
+				bind:questionResponse={formResponse.responses[index]}
+				onChange={(event) => {
+					debouncedSave(formResponse);
+				}}
+				{maxExampleAnswers}
+			/>
 			<hr class="border-slate-600" />
 		{/each}
 		<div class="h-4"></div>
