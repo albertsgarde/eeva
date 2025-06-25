@@ -19,16 +19,13 @@
 	let { data }: Props = $props();
 	let { formId } = data;
 
-	// State to store the user's name
-	let userName: string = $state('');
-
 	let continuing: boolean = $state(false);
 
 	// Function to handle form submission
 	async function handleContinue(): Promise<void> {
 		const createFormResponseRequest = {
 			formId,
-			subjectName: userName.trim()
+			subjectName: ''
 		};
 
 		continuing = true;
@@ -56,26 +53,19 @@
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
 		<Title>{m['page.forms.title']()}</Title>
-		<div class="h-1"></div>
 		<Subtitle>{m['page.forms.subtitle']()}</Subtitle>
 		<div class="h-2"></div>
 		<P><Markdown content={m['page.forms.pitch']()} /></P>
-		<Header2>{m['page.forms.pleaseInputName']()}</Header2>
 
-		<div class="flex">
-			<InputText
-				bind:response={userName}
-				placeholder={m['page.forms.namePlaceholder']()}
-				onEnter={handleContinue}
-			/>
-			<SuccessButton onClick={handleContinue} disabled={!userName.trim()} processing={continuing}>
+		<div class="h-2"></div>
+		<div class="flex justify-center">
+			<SuccessButton onClick={handleContinue} processing={continuing}>
 				{m['page.forms.continue']()}
 			</SuccessButton>
 		</div>
-		<div class="h-2"></div>
-		<details class="rounded p-4">
+		<!--<details class="rounded p-4">
 			<summary class="cursor-pointer select-none font-medium">Om produktet</summary>
 			{m['page.forms.aboutTheApp']()}
-		</details>
+		</details>-->
 	</div>
 </div>
