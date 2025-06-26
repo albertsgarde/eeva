@@ -101,7 +101,10 @@ export type QuestionResponse = z.infer<typeof QuestionResponse>;
 export const FormResponse = z.object({
     formId: FormId,
     responses: z.array(QuestionResponse),
-    subjectName: z.string()
+    subjectName: z.string(),
+    subjectEmail: z.email().optional(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
 });
 
 export type FormResponse = z.infer<typeof FormResponse>;

@@ -6,6 +6,8 @@
 	import { m } from '$loc/messages.js';
 	import { FormResponse } from '$lib/base';
 	import { debounce } from 'lodash-es';
+	import InputText from '$lib/ui/InputText.svelte';
+	import P from '$lib/ui/P.svelte';
 
 	interface Props {
 		data: Data;
@@ -13,6 +15,8 @@
 	let { data }: Props = $props();
 	let { formResponseId, formResponse: initialFormResponse, maxExampleAnswers } = data;
 	let formResponse = $state(structuredClone(initialFormResponse));
+
+	let subjectEmail: string = $state(formResponse.subjectEmail || '');
 
 	let continuing: boolean = $state(false);
 
@@ -34,6 +38,7 @@
 
 	async function submit() {
 		continuing = true;
+		formResponse.subjectEmail = $state.snapshot(subjectEmail).trim();
 		await saveToBackend(formResponse).then(() => {
 			goto(`/form-responses/${formResponseId}/completed`);
 		});
@@ -55,7 +60,9 @@
 			<hr class="border-slate-600" />
 		{/each}
 		<div class="h-4"></div>
+		<P>Email:</P>
 		<div class="flex items-center justify-end">
+			<InputText placeholder="Your email..." bind:response={subjectEmail}></InputText>
 			<SuccessButton onClick={submit} processing={continuing}>{m.submit()}</SuccessButton>
 		</div>
 	</div>
