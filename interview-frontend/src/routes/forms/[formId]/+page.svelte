@@ -29,18 +29,21 @@
 	async function handleCreateNew(): Promise<void> {
 		creatingNew = true;
 		const formResponseId: FormResponseId = await createFormResponse(formId, fetch);
-		goto(`/form-responses/${formResponseId}`);
+		goto(`/form-responses/${formResponseId}?newFormResponse=true`);
 	}
 </script>
 
 <div class="flex h-dvh items-center justify-center">
 	<div class="mx-auto max-w-2xl px-4">
 		<Subtitle>Vil du fortsætte din tidligere besvarelse?</Subtitle>
-		<SuccessButton onClick={handleContinue} processing={continuing} disabled={creatingNew}
-			>Fortsæt</SuccessButton
-		>
-		<SuccessButton onClick={handleCreateNew} processing={creatingNew} disabled={continuing}
-			>Ny besvarelse</SuccessButton
-		>
+		<div class="my-4"></div>
+		<div class="flex justify-between">
+			<SuccessButton onClick={handleContinue} processing={continuing} disabled={creatingNew}
+				>Fortsæt</SuccessButton
+			>
+			<SuccessButton onClick={handleCreateNew} processing={creatingNew} disabled={continuing}
+				>Ny besvarelse</SuccessButton
+			>
+		</div>
 	</div>
 </div>

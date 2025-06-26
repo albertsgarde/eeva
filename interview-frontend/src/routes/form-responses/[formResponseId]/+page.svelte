@@ -9,20 +9,20 @@
 	import InputText from '$lib/ui/InputText.svelte';
 	import P from '$lib/ui/P.svelte';
 	import Title from '$lib/ui/Title.svelte';
-	import Subtitle from '$lib/ui/Subtitle.svelte';
-	import Markdown from '$lib/ui/Markdown.svelte';
-	import PSmall from '$lib/ui/PSmall.svelte';
+	import IconArrowDown from '@lucide/svelte/icons/arrow-down';
 
 	interface Props {
 		data: Data;
 	}
 	let { data }: Props = $props();
-	let { formResponseId, formResponse: initialFormResponse, maxExampleAnswers } = data;
+	let { formResponseId, formResponse: initialFormResponse, maxExampleAnswers, showEmail } = data;
 	let formResponse = $state(structuredClone(initialFormResponse));
 
-	let subjectEmail: string = $state(formResponse.subjectEmail || '');
+	let subjectEmail: string = $state(showEmail ? (initialFormResponse.subjectEmail ?? '') : '');
 
 	let continuing: boolean = $state(false);
+
+	let questionStart: HTMLElement | undefined;
 
 	async function saveToBackend(formResponse: FormResponse) {
 		const url = `/api/form-responses/${formResponseId}`;
@@ -48,17 +48,24 @@
 		});
 	}
 
+	async function scrollToQuestions() {
+		questionStart?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
 	const debouncedSave = debounce(saveToBackend, 1000);
 </script>
 
 <div class="mx-auto flex max-w-2xl flex-col">
-	<div class="overflow-y-auto overflow-x-hidden p-1">
+	<div class="mt-8 overflow-y-auto overflow-x-hidden">
 		<Title>{m['page.forms.title']()}</Title>
 		<!--<Subtitle>{m['page.forms.subtitle']()}</Subtitle>-->
 		<div class="h-2"></div>
 		<P>{m['page.forms.pitch']()}</P>
 
-		<hr class="mt-4 border-slate-600" />
+		<div class="items-right flex justify-end">
+			<SuccessButton onClick={scrollToQuestions}><IconArrowDown /></SuccessButton>
+		</div>
+		<hr bind:this={questionStart} class="my-12 border-slate-600" />
 		{#each formResponse.responses as questionResponse, index}
 			<FormQuestion
 				bind:questionResponse={formResponse.responses[index]}
@@ -79,5 +86,6 @@
 			>Hvis du får en invitation, er du selvfølgelig meget velkommen til at takke nej, men overvej
 			at vi specifikt har inviteret dig fordi vi tror du vil trives i de andre deltageres selskab.</P
 		>
+		<div class="my-4"></div>
 	</div>
 </div>

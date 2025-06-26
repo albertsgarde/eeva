@@ -21,6 +21,6 @@ export async function load({ fetch, params, cookies }: { fetch: any, params: {fo
         return { formId, formResponseId };
     } else {
         const newFormResponseId: FormResponseId = await createFormResponse(formId, fetch);
-        redirect(303, `/form-responses/${newFormResponseId}`);
+        redirect(303, `/form-responses/${newFormResponseId}?newFormResponse=true`, );
     }
 }

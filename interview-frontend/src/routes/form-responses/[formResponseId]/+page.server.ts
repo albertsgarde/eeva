@@ -6,6 +6,7 @@ export interface Data {
     formResponseId: FormResponseId;
     formResponse: FormResponse;
     maxExampleAnswers: number | null;
+    showEmail: boolean;
 }
 
 export async function load({ params, url, cookies }: { params: { formResponseId: FormResponseId }, url: URL, cookies: any}): Promise<Data> {
@@ -22,11 +23,22 @@ export async function load({ params, url, cookies }: { params: { formResponseId:
         throw error(500, await response.text());
     }
 
+    let showEmail = false;
+    if (url.searchParams.has('newFormResponse')) {
+        showEmail = true;
+        cookies.set("newFormResponse", "true", {
+            path: '/',
+            httpOnly: true,
+            secure: false,
+        }
+        )
+    }
+
     cookies.set("formResponseId", params.formResponseId.toString(), {
         path: '/',
         httpOnly: true,
         secure: false,
     })
 
-    return { formResponseId: params.formResponseId, formResponse: await response.json(), maxExampleAnswers};
+    return { formResponseId: params.formResponseId, formResponse: await response.json(), maxExampleAnswers, showEmail};
 }
