@@ -47,8 +47,6 @@ def create_router(database: Database) -> APIRouter:
             form_id=request.form_id,
             responses=form_questions,
             subject_name=request.subject_name,
-            created_at=datetime.now(),
-            modified_at=datetime.now(),
         )
         id = form_responses.create(form_response)
         return CreateFromFormResponse(id=id, form_response=form_response)
@@ -65,13 +63,6 @@ def create_router(database: Database) -> APIRouter:
     @router.put("/{form_response_id}")
     def update_form_response(form_response_id: FormResponseId, form_response: FormResponse):
         form_responses = database.form_responses()
-        form_response = FormResponse(
-            form_id=form_response.form_id,
-            responses=form_response.responses,
-            subject_name=form_response.subject_name,
-            created_at=form_response.created_at,
-            modified_at=datetime.now(),
-        )
         form_responses.upsert(form_response_id, form_response)
         return {"status": "updated", "id": form_response_id}
 
@@ -97,6 +88,7 @@ def create_router(database: Database) -> APIRouter:
             form_id=form_response.form_id,
             responses=new_responses,
             subject_name=form_response.subject_name,
+            subject_email=form_response.subject_email,
             created_at=form_response.created_at,
             modified_at=datetime.now(),
         )
@@ -115,6 +107,7 @@ def create_router(database: Database) -> APIRouter:
             form_id=form_response.form_id,
             responses=form_response.responses,
             subject_name=subject_name,
+            subject_email=form_response.subject_email,
             created_at=form_response.created_at,
             modified_at=datetime.now(),
         )
