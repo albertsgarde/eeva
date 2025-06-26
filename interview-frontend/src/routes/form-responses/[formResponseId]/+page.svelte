@@ -8,6 +8,10 @@
 	import { debounce } from 'lodash-es';
 	import InputText from '$lib/ui/InputText.svelte';
 	import P from '$lib/ui/P.svelte';
+	import Title from '$lib/ui/Title.svelte';
+	import Subtitle from '$lib/ui/Subtitle.svelte';
+	import Markdown from '$lib/ui/Markdown.svelte';
+	import PSmall from '$lib/ui/PSmall.svelte';
 
 	interface Props {
 		data: Data;
@@ -49,6 +53,12 @@
 
 <div class="mx-auto flex max-w-2xl flex-col">
 	<div class="overflow-y-auto overflow-x-hidden p-1">
+		<Title>{m['page.forms.title']()}</Title>
+		<!--<Subtitle>{m['page.forms.subtitle']()}</Subtitle>-->
+		<div class="h-2"></div>
+		<P>{m['page.forms.pitch']()}</P>
+
+		<hr class="mt-4 border-slate-600" />
 		{#each formResponse.responses as questionResponse, index}
 			<FormQuestion
 				bind:questionResponse={formResponse.responses[index]}
@@ -60,10 +70,14 @@
 			<hr class="border-slate-600" />
 		{/each}
 		<div class="h-4"></div>
-		<P>Email:</P>
+		<P>Email (optional):</P>
 		<div class="flex items-center justify-end">
 			<InputText placeholder="Your email..." bind:response={subjectEmail}></InputText>
 			<SuccessButton onClick={submit} processing={continuing}>{m.submit()}</SuccessButton>
 		</div>
+		<P
+			>Hvis du får en invitation, er du selvfølgelig meget velkommen til at takke nej, men overvej
+			at vi specifikt har inviteret dig fordi vi tror du vil trives i de andre deltageres selskab.</P
+		>
 	</div>
 </div>

@@ -8,7 +8,7 @@ export interface Data {
     maxExampleAnswers: number | null;
 }
 
-export async function load({ params, url }: { params: { formResponseId: FormResponseId }, url: URL}): Promise<Data> {
+export async function load({ params, url, cookies }: { params: { formResponseId: FormResponseId }, url: URL, cookies: any}): Promise<Data> {
     const backendURL = `${BACKEND_ORIGIN}api/form-responses/${params.formResponseId}`;
     const maxExampleAnswersString = url.searchParams.get('maxExampleAnswers');
     const maxExampleAnswers = maxExampleAnswersString === null ? null : parseInt(maxExampleAnswersString);
@@ -21,6 +21,12 @@ export async function load({ params, url }: { params: { formResponseId: FormResp
     if (!response.ok) {
         throw error(500, await response.text());
     }
+
+    cookies.set("formResponseId", params.formResponseId.toString(), {
+        path: '/',
+        httpOnly: true,
+        secure: false,
+    })
 
     return { formResponseId: params.formResponseId, formResponse: await response.json(), maxExampleAnswers};
 }
