@@ -10,7 +10,8 @@ export interface Data {
 }
 
 export async function load({ params, url, cookies }: { params: { formResponseId: FormResponseId }, url: URL, cookies: any}): Promise<Data> {
-    const backendURL = `${BACKEND_ORIGIN}api/form-responses/${params.formResponseId}`;
+    const formResponseId = params.formResponseId;
+    const backendURL = `${BACKEND_ORIGIN}api/form-responses/${formResponseId}`;
     const maxExampleAnswersString = url.searchParams.get('maxExampleAnswers');
     const maxExampleAnswers = maxExampleAnswersString === null ? null : parseInt(maxExampleAnswersString);
     
@@ -23,22 +24,23 @@ export async function load({ params, url, cookies }: { params: { formResponseId:
         throw error(500, await response.text());
     }
 
-    let showEmail = false;
-    if (url.searchParams.has('newFormResponse')) {
-        showEmail = true;
-        cookies.set("newFormResponse", "true", {
+    if (url.searchParams.has('newFormResponse') ) {
+        cookies.set(`showEmail${formResponseId}`, "true", {
             path: '/',
             httpOnly: true,
             secure: false,
+            maxAge: 60 * 60 * 24 * 30 // 30 days
         }
         )
     }
 
-    cookies.set("formResponseId", params.formResponseId.toString(), {
+    const showEmail = cookies.get(`showEmail${formResponseId}`) === "true";
+
+    cookies.set("formResponseId", formResponseId.toString(), {
         path: '/',
         httpOnly: true,
         secure: false,
     })
 
-    return { formResponseId: params.formResponseId, formResponse: await response.json(), maxExampleAnswers, showEmail};
+    return { formResponseId, formResponse: await response.json(), maxExampleAnswers, showEmail};
 }

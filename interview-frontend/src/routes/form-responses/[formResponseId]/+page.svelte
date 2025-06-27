@@ -42,7 +42,10 @@
 
 	async function submit() {
 		continuing = true;
-		formResponse.subjectEmail = $state.snapshot(subjectEmail).trim();
+		const curSubjectEmail = $state.snapshot(subjectEmail).trim();
+		if (curSubjectEmail.length > 0) {
+			formResponse.subjectEmail = $state.snapshot(subjectEmail).trim();
+		}
 		await saveToBackend(formResponse).then(() => {
 			goto(`/form-responses/${formResponseId}/completed`);
 		});
@@ -51,6 +54,10 @@
 	async function scrollToQuestions() {
 		questionStart?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
+
+	let validEmail = $derived(() => {
+		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subjectEmail);
+	});
 
 	const debouncedSave = debounce(saveToBackend, 1000);
 </script>
@@ -77,15 +84,25 @@
 			<hr class="border-slate-600" />
 		{/each}
 		<div class="h-4"></div>
+		<P>Efter speed-friendingen er næste led i projektet en speed-dating event.</P>
+		<input type="checkbox" bind:checked={formResponse.joinDating} />
+		<label for="join-dating">
+			Jeg vil gerne kontaktes i forbindelse med en speed-dating event.
+		</label>
+		<div class="h-4"></div>
 		<P>Email (optional):</P>
 		<div class="flex items-center justify-end">
 			<InputText placeholder="Your email..." bind:response={subjectEmail}></InputText>
-			<SuccessButton onClick={submit} processing={continuing}>{m.submit()}</SuccessButton>
+			<SuccessButton
+				onClick={submit}
+				processing={continuing}
+				disabled={formResponse.joinDating && !validEmail()}>{m.submit()}</SuccessButton
+			>
 		</div>
 		<P
 			>Hvis du får en invitation, er du selvfølgelig meget velkommen til at takke nej, men overvej
 			at vi specifikt har inviteret dig fordi vi tror du vil trives i de andre deltageres selskab.</P
 		>
-		<div class="my-4"></div>
+		<div class="h-4"></div>
 	</div>
 </div>

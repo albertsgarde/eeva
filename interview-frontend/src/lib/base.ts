@@ -103,6 +103,7 @@ export const FormResponse = z.object({
     responses: z.array(QuestionResponse),
     subjectName: z.string(),
     subjectEmail: z.email().optional(),
+    joinDating: z.boolean().default(false),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
 });

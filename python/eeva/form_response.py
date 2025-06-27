@@ -21,5 +21,6 @@ class FormResponse(NetworkModel):
     responses: list[QuestionResponse]
     subject_name: str = Field()
     subject_email: str | None = Field(default=None)
+    join_dating: bool = Field(default=False)
     created_at: datetime = Field(default=datetime.now())
     modified_at: datetime = Field(default=datetime.now())

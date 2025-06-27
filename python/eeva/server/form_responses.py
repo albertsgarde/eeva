@@ -89,6 +89,7 @@ def create_router(database: Database) -> APIRouter:
             responses=new_responses,
             subject_name=form_response.subject_name,
             subject_email=form_response.subject_email,
+            join_dating=form_response.join_dating,
             created_at=form_response.created_at,
             modified_at=datetime.now(),
         )
