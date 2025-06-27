@@ -40,6 +40,7 @@ export async function load({ params, url, cookies }: { params: { formResponseId:
         path: '/',
         httpOnly: true,
         secure: false,
+        maxAge: 60 * 60 * 24 * 30 // 30 days
     })
 
     return { formResponseId, formResponse: await response.json(), maxExampleAnswers, showEmail};

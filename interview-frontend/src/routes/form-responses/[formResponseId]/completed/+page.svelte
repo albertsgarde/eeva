@@ -28,8 +28,10 @@
 </script>
 
 <div class="flex h-dvh items-center justify-center">
-	<div class="mx-auto flex max-w-xl flex-col items-center px-4 text-center">
-		<Header2>{m['page.formResponses/completed.title']()}</Header2>
+	<div class="flex max-w-xl flex-col px-4">
+		<div class=" items-center text-center">
+			<Header2>{m['page.formResponses/completed.title']()}</Header2>
+		</div>
 		<P>
 			{m['page.formResponses/completed.description']({
 				url: `${host()}/form-responses/${formResponseId}`
@@ -37,5 +39,12 @@
 		</P>
 		<SuccessButton onClick={copyLink}>{m[`page.formResponses/completed.copyLink`]()}</SuccessButton>
 		<a class="text-xs" href={link()}>{link()}</a>
+
+		<div class="h-12"></div>
+		<P>Hvis du er interesseret i projektet og gerne vil høre mere kan du kontakte os på email.</P>
+		<div class="">
+			<P>Abel: abeljordbo@gmail.com</P>
+			<P>Albert: albertsgarde@gmail.com</P>
+		</div>
 	</div>
 </div>
