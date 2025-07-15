@@ -22,7 +22,7 @@ steps:
         "eeva-cd",
         "--region=europe-west4",
         "--service-account=cd-builder@eeva-460211.iam.gserviceaccount.com",
-        "--min-instances=1",
+        "--min-instances=0",
         "--concurrency=80",
         "--add-volume=name=prompts,type=cloud-storage,bucket=eeva-prompts",
         "--add-volume=name=data,type=cloud-storage,bucket=eeva-data",
