@@ -247,7 +247,6 @@ dependencies = [
     { name = "langgraph" },
     { name = "pydantic" },
     { name = "sse-starlette" },
-    { name = "supabase" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -256,6 +255,7 @@ dev = [
     { name = "mypy" },
     { name = "requests" },
     { name = "ruff" },
+    { name = "supabase" },
     { name = "types-requests" },
 ]
 
@@ -268,7 +268,6 @@ requires-dist = [
     { name = "langgraph", specifier = ">=0.4.0" },
     { name = "pydantic", specifier = ">=2.11.3" },
     { name = "sse-starlette", specifier = ">=2.3.6" },
-    { name = "supabase", specifier = ">=2.16.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.2" },
 ]
 
@@ -277,6 +276,7 @@ dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "ruff", specifier = ">=0.11.6" },
+    { name = "supabase", specifier = ">=2.16.0" },
     { name = "types-requests", specifier = ">=2.32.0.20250515" },
 ]
 
