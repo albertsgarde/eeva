@@ -2,10 +2,11 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI
+from langchain import chat_models
 
 from eeva.utils import Model
 
-from . import form_responses, forms, interviews, prompts, questions
+from . import analyzer, form_responses, forms, interviews, prompts, questions
 from .database import Database
 
 
@@ -29,6 +30,8 @@ def create_app() -> FastAPI:
     database = Database(database_path)
     prompts.load_default_prompts(database, prompt_dir)
 
+    llm = chat_models.init_chat_model("gpt-4o-mini", model_provider="openai")
+
     model = Model(
         model_name="gpt-4o-mini",
         model_provider="openai",
@@ -46,5 +49,6 @@ def create_app() -> FastAPI:
     app.include_router(questions.create_router(database), prefix="/api/questions")
     app.include_router(forms.create_router(database), prefix="/api/forms")
     app.include_router(form_responses.create_router(database), prefix="/api/form-responses")
+    app.include_router(analyzer.create_router(database, llm), prefix="/api/analyzer")
 
     return app
