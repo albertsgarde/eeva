@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from langchain import chat_models
 
 from eeva.utils import Model
@@ -12,6 +13,14 @@ from .database import Database
 
 def create_app() -> FastAPI:
     app = FastAPI()
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["https://eeva.site"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     prompt_dir_str = os.getenv("PROMPT_DIR")
     if prompt_dir_str is None:
