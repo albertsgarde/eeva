@@ -14,6 +14,14 @@ from .database import Database
 def create_app() -> FastAPI:
     app = FastAPI()
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     prompt_dir_str = os.getenv("PROMPT_DIR")
     if prompt_dir_str is None:
         raise ValueError("PROMPT_DIR environment variable is not set.")
