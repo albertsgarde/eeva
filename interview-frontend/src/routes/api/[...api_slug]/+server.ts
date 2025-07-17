@@ -59,3 +59,14 @@ export async function DELETE({
 }) {
 	return reroute({ params, request }, 'DELETE');
 }
+
+export async function OPTIONS({ params, request }) {
+	return new Response(null, {
+		status: 200,
+		headers: {
+			'Access-Control-Allow-Origin': '*', // or specify your domain
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+			'Access-Control-Allow-Headers': '*',
+		}
+	});
+}

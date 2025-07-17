@@ -10,9 +10,9 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-		// import 'something' from '$i18n/…'
-		$loc: 'src/paraglide',
-		'$loc/*': 'src/paraglide/*'   // make sub-paths work too
+			// import 'something' from '$i18n/…'
+			$loc: 'src/paraglide',
+			'$loc/*': 'src/paraglide/*'   // make sub-paths work too
 		}
 	}
 };
