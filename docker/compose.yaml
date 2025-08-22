@@ -9,7 +9,7 @@ services:
         image: eeva-backend
         volumes:
             - ../${PROMPT_DIR?prompt dir}:/prompts/
-            - ../${DATABASE_PATH?database_path}:/data/db.sqlite
+            - ../${DATA_PATH?data_path}:/data/
         ports:
             - 8000:8000
     frontend:
