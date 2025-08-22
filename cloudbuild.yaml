@@ -4,7 +4,7 @@ steps:
     args: ["compose", "-f", "docker/compose.yaml", "build"]
     env:
       - "PROMPT_DIR=prompts/"
-      - "DATABASE_PATH=data/db.sqlite"
+      - "DATA_PATH=data/"
   - name: "gcr.io/cloud-builders/docker"
     args: ["tag", "eeva-frontend", "gcr.io/eeva-460211/eeva-frontend"]
   - name: "gcr.io/cloud-builders/docker"

@@ -30,12 +30,13 @@ def create_app() -> FastAPI:
     if not prompt_dir.exists():
         raise ValueError(f"Prompt directory {prompt_dir} does not exist.")
 
-    database_path_str = os.getenv("DATABASE_PATH")
-    if database_path_str is None:
-        raise ValueError("DATABASE_PATH environment variable is not set.")
+    data_path_str = os.getenv("DATA_PATH")
+    if data_path_str is None:
+        raise ValueError("DATA_PATH environment variable is not set.")
     else:
-        database_path = Path(database_path_str).resolve()
+        data_path = Path(data_path_str).resolve()
 
+    database_path = data_path / "db.sqlite"
     database = Database(database_path)
     prompts.load_default_prompts(database, prompt_dir)
 
@@ -58,6 +59,6 @@ def create_app() -> FastAPI:
     app.include_router(questions.create_router(database), prefix="/api/questions")
     app.include_router(forms.create_router(database), prefix="/api/forms")
     app.include_router(form_responses.create_router(database), prefix="/api/form-responses")
-    app.include_router(analyzer.create_router(database, llm), prefix="/api/analyzer")
+    app.include_router(analyzer.create_router(database, llm, data_path), prefix="/api/analyzer")
 
     return app
