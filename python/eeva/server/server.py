@@ -40,10 +40,10 @@ def create_app() -> FastAPI:
     database = Database(database_path)
     prompts.load_default_prompts(database, prompt_dir)
 
-    llm = chat_models.init_chat_model("gpt-4o-mini", model_provider="openai")
+    llm = chat_models.init_chat_model("gpt-5", model_provider="openai")
 
     model = Model(
-        model_name="gpt-4o-mini",
+        model_name="gpt-5",
         model_provider="openai",
     )
 

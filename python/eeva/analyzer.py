@@ -59,7 +59,6 @@ async def analyze(response: Response, llm: BaseChatModel, data_path: Path) -> Pr
         output = typing.cast(AnalyzerOutput, raw_output)
     else:
         raise ValueError(f"Unexpected output type: {type(raw_output)}. Expected dict or AnalyzerOutput.")
-    print(output.horoscope_help)
     avg_identity = output.identity
     profile = Profile(identity=avg_identity, horoscope=output.horoscope)
 
