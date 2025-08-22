@@ -17,3 +17,5 @@ data/
 prompts/**
 !prompts/default/
 !prompts/default/**
+
+local_*
