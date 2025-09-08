@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from langchain.chat_models.base import BaseChatModel
 
 from eeva import analyzer
-from eeva.analyzer import Profile, Response
+from eeva.analyzer import Profile, RelationshipProfile, Response
 
 from .database import Database
 
@@ -19,7 +19,7 @@ def create_router(database: Database, llm: BaseChatModel, data_path: Path) -> AP
     @router.post("/relationship_horoscope")
     async def relationship_horoscope(
         response1: Response, profile1: Profile, response2: Response, profile2: Profile
-    ) -> str:
-        return await analyzer.relationship_horoscope(response1, profile1, response2, profile2, llm, data_path)
+    ) -> RelationshipProfile:
+        return await analyzer.analyze_relationship(response1, profile1, response2, profile2, llm, data_path)
 
     return router

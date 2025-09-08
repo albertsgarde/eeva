@@ -16,6 +16,10 @@ class Profile(BaseModel):
         return abs(self.identity - other.identity)
 
 
+class RelationshipProfile(BaseModel):
+    horoscope: str = Field()
+
+
 class QuestionResponse(BaseModel):
     question: str = Field()
     response: str = Field()
@@ -65,14 +69,14 @@ async def analyze(response: Response, llm: BaseChatModel, data_path: Path) -> Pr
     return profile
 
 
-async def relationship_horoscope(
+async def analyze_relationship(
     response1: Response,
     profile1: Profile,
     response2: Response,
     profile2: Profile,
     llm: BaseChatModel,
     data_path: Path,
-) -> str:
+) -> RelationshipProfile:
     async with aiofiles.open(data_path / "relationship_horoscope.txt", mode="r", encoding="utf-8") as f:
         relationship_horoscope_prompt = await f.read()
 
@@ -104,4 +108,4 @@ async def relationship_horoscope(
     else:
         raise ValueError(f"Unexpected output type: {type(raw_output)}. Expected dict or RelationshipHoroscopeOutput.")
 
-    return output.relationship_horoscope
+    return RelationshipProfile(horoscope=output.relationship_horoscope)
