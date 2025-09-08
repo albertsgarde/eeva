@@ -16,7 +16,7 @@ def create_router(database: Database, llm: BaseChatModel, data_path: Path) -> AP
     async def analyze(response: Response) -> Profile:
         return await analyzer.analyze(response, llm, data_path)
 
-    @router.post("/analyze_relationship")
+    @router.post("/analyze-relationship")
     async def analyze_relationship(
         response1: Response, profile1: Profile, response2: Response, profile2: Profile
     ) -> RelationshipProfile:
