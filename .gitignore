@@ -19,3 +19,4 @@ prompts/**
 !prompts/default/**
 
 analyzer_dev_real.ipynb
+dev.ipynb
