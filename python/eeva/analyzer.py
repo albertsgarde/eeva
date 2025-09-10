@@ -25,7 +25,11 @@ class QuestionResponse(BaseModel):
     response: str = Field()
 
 
-Response = Annotated[dict[str, QuestionResponse], Field()]
+class Response(BaseModel):
+    first_name: str = Field()
+    last_name: str | None = Field()
+    responses: dict[str, QuestionResponse] = Field()
+
 
 ResponseSet = Annotated[dict[str, Response], Field()]
 
@@ -49,7 +53,9 @@ async def analyze(response: Response, llm: BaseChatModel, data_path: Path) -> Pr
 
     structured_llm = llm.with_structured_output(AnalyzerOutput)
 
-    content = "\n".join(f"{question}: {question_response.response}" for question, question_response in response.items())
+    content = "\n".join(
+        f"{question}: {question_response.response}" for question, question_response in response.responses.items()
+    )
 
     raw_output = await structured_llm.ainvoke(
         [
@@ -89,10 +95,14 @@ async def analyze_relationship(
 
     content = (
         "Person 1:\n"
-        + "\n".join(f"{question}: {question_response.response}" for question, question_response in response1.items())
+        + "\n".join(
+            f"{question}: {question_response.response}" for question, question_response in response1.responses.items()
+        )
         + f"\nProfile Horoscope: {profile1.horoscope}\n\n"
         + "Person 2:\n"
-        + "\n".join(f"{question}: {question_response.response}" for question, question_response in response2.items())
+        + "\n".join(
+            f"{question}: {question_response.response}" for question, question_response in response2.responses.items()
+        )
         + f"\nProfile Horoscope: {profile2.horoscope}\n\n"
     )
 
