@@ -76,34 +76,28 @@ async def analyze(response: Response, llm: BaseChatModel, data_path: Path) -> Pr
 
 
 async def analyze_relationship(
-    response1: Response,
-    profile1: Profile,
-    response2: Response,
-    profile2: Profile,
-    llm: BaseChatModel,
-    data_path: Path,
+    response1: Response, profile1: Profile, response2: Response, profile2: Profile, llm: BaseChatModel, data_path: Path
 ) -> RelationshipProfile:
     async with aiofiles.open(data_path / "relationship_horoscope.txt", mode="r", encoding="utf-8") as f:
         relationship_horoscope_prompt = await f.read()
 
-    class RelationshipHoroscopeOutput(BaseModel):
+    class AnalyzeRelationshipOutput(BaseModel):
         """ """
 
         relationship_horoscope: str = Field(description=relationship_horoscope_prompt)
 
-    structured_llm = llm.with_structured_output(RelationshipHoroscopeOutput)
-
+    structured_llm = llm.with_structured_output(AnalyzeRelationshipOutput)
     content = (
-        "Person 1:\n"
+        "Name and answers: "
+        f"{response1.first_name},\n"
         + "\n".join(
             f"{question}: {question_response.response}" for question, question_response in response1.responses.items()
         )
-        + f"\nProfile Horoscope: {profile1.horoscope}\n\n"
-        + "Person 2:\n"
+        + "Name and answers: "
+        f"{response2.first_name},\n"
         + "\n".join(
             f"{question}: {question_response.response}" for question, question_response in response2.responses.items()
         )
-        + f"\nProfile Horoscope: {profile2.horoscope}\n\n"
     )
 
     raw_output = await structured_llm.ainvoke(
@@ -111,10 +105,11 @@ async def analyze_relationship(
             HumanMessage(content=content),
         ]
     )
+
     if isinstance(raw_output, dict):
-        output = RelationshipHoroscopeOutput(**raw_output)
-    elif isinstance(raw_output, RelationshipHoroscopeOutput):
-        output = typing.cast(RelationshipHoroscopeOutput, raw_output)
+        output = AnalyzeRelationshipOutput(**raw_output)
+    elif isinstance(raw_output, AnalyzeRelationshipOutput):
+        output = typing.cast(AnalyzeRelationshipOutput, raw_output)
     else:
         raise ValueError(f"Unexpected output type: {type(raw_output)}. Expected dict or RelationshipHoroscopeOutput.")
 
