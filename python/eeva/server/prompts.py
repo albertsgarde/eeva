@@ -7,9 +7,11 @@ from eeva.prompt import Prompt, PromptId
 from eeva.utils import NetworkModel
 
 from .database import Database
+from .logging_config import get_logger
 
 
 def load_default_prompts(database: Database, prompt_dir: Path):
+    logger = get_logger(__name__)
     files = [file for file in prompt_dir.rglob("*.txt") if file.is_file()]
     ids: dict[PromptId, Path] = {}
     for file in files:
@@ -17,19 +19,29 @@ def load_default_prompts(database: Database, prompt_dir: Path):
         try:
             id = PromptId(id=file_name)
         except ValidationError:
-            print(f"Invalid prompt ID '{file_name}' found. File path: {file.absolute()}")
+            logger.warning("Invalid prompt ID found", extra={
+                "prompt_id": file_name,
+                "file_path": str(file.absolute())
+            })
             continue
         if id in ids:
-            print(f"Duplicate prompt ID '{id}'. Files: {ids[id].absolute()} and {file.absolute()}")
+            logger.warning("Duplicate prompt ID found", extra={
+                "prompt_id": str(id),
+                "existing_file": str(ids[id].absolute()),
+                "duplicate_file": str(file.absolute())
+            })
             continue
         ids[id] = file
     prompts = [(id, Prompt(content=file.read_text(encoding="utf-8"))) for id, file in ids.items()]
     for id, prompt in prompts:
         if database.prompts().exists(id.id):
-            print(f"Prompt with id {id} already exists in the database.")
+            logger.info("Prompt already exists in database", extra={"prompt_id": str(id)})
             continue
         database.prompts().create_with_id(prompt, id.id)
-        print(f"Loaded prompt: {id} - {prompt.content[:30]}...")
+        logger.info("Loaded prompt", extra={
+            "prompt_id": str(id),
+            "content_preview": prompt.content[:30] + "..." if len(prompt.content) > 30 else prompt.content
+        })
 
 
 class CreatePromptRequest(NetworkModel):
