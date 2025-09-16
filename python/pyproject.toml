@@ -7,12 +7,10 @@ requires-python = ">=3.13"
 dependencies = [
     "aiofiles>=24.1.0",
     "fastapi>=0.115.12",
-    "ipykernel>=6.29.5",
     "langchain>=0.3.24",
     "langchain-anthropic>=0.3.18",
     "langchain-openai>=0.3.14",
     "langgraph>=0.4.0",
-    "matplotlib>=3.10.5",
     "pydantic>=2.11.3",
     "sse-starlette>=2.3.6",
     "types-aiofiles>=24.1.0.20250822",
@@ -26,6 +24,10 @@ dev = [
     "ruff>=0.11.6",
     "types-requests>=2.32.0.20250515",
     "supabase>=2.16.0",
+    "google-cloud-logging>=3.12.1",
+    "matplotlib>=3.10.5",
+    "ipykernel>=6.29.5",
+    "pandas>=2.3.2",
 ]
 
 [build-system]
