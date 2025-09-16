@@ -22,7 +22,6 @@ def create_router(database: Database, llm: BaseChatModel, data_path: Path) -> AP
         response1: Response, profile1: Profile, response2: Response, profile2: Profile
     ) -> RelationshipProfile:
         print(f"Analyzing link for users {response1.first_name} and {response2.first_name}")
-        return RelationshipProfile(horoscope="DEBUG")
         return await analyzer.analyze_relationship(response1, profile1, response2, profile2, llm, data_path)
 
     return router
