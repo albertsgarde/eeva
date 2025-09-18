@@ -6,14 +6,18 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiofiles>=24.1.0",
+    "anyio>=4.9.0",
     "fastapi>=0.115.12",
     "langchain>=0.3.24",
     "langchain-anthropic>=0.3.18",
+    "langchain-google-genai>=2.1.12",
     "langchain-openai>=0.3.14",
-    "langgraph>=0.4.0",
+    "langgraph>=0.6.7",
     "pydantic>=2.11.3",
+    "regex>=2024.11.6",
     "sse-starlette>=2.3.6",
     "types-aiofiles>=24.1.0.20250822",
+    "types-regex>=2025.9.18.20250921",
     "uvicorn[standard]>=0.34.2",
 ]
 

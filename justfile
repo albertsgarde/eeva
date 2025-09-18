@@ -24,3 +24,6 @@ u:
 push BRANCH:
     jj bookmark move {{BRANCH}} --to=@-
     jj git push
+
+agent:
+    uv run --project python -m eeva.analyzer_agent
