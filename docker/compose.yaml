@@ -12,18 +12,6 @@ services:
             - ../${DATA_PATH?data_path}:/data/
         ports:
             - 8000:8000
-    frontend:
-        container_name: eeva-frontend
-        pull_policy: build
-        build:
-            context: ..
-            dockerfile: docker/frontend.dockerfile
-            target: frontend-prod
-        image: eeva-frontend
-        ports:
-            - 3000:3000
-        environment:
-            - BACKEND_ORIGIN=http://backend:8000
 
 networks:
     app-network:
