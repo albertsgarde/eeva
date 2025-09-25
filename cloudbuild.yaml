@@ -22,7 +22,6 @@ steps:
         "--concurrency=80",
         "--add-volume=name=prompts,type=cloud-storage,bucket=eeva-prompts",
         "--add-volume=name=data,type=cloud-storage,bucket=eeva-data",
-        "--container=eeva-backend",
         "--image=gcr.io/eeva-460211/eeva-backend",
         "--port=8000",
         "--add-volume-mount=volume=prompts,mount-path=/prompts",
