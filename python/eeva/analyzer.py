@@ -54,7 +54,8 @@ async def analyze(response: Response, llm: BaseChatModel, data_path: Path) -> Pr
     structured_llm = llm.with_structured_output(AnalyzerOutput)
 
     content = "\n".join(
-        f"{question}: {question_response.response}" for question, question_response in response.responses.items()
+        f"{question_response.question}: {question_response.response}"
+        for question_response in response.responses.values()
     )
 
     raw_output = await structured_llm.ainvoke(
@@ -91,12 +92,14 @@ async def analyze_relationship(
         "Name and answers: "
         f"{response1.first_name},\n"
         + "\n".join(
-            f"{question}: {question_response.response}" for question, question_response in response1.responses.items()
+            f"{question_response.question}: {question_response.response}"
+            for question_response in response1.responses.values()
         )
         + "Name and answers: "
         f"{response2.first_name},\n"
         + "\n".join(
-            f"{question}: {question_response.response}" for question, question_response in response2.responses.items()
+            f"{question_response.question}: {question_response.response}"
+            for question_response in response2.responses.values()
         )
     )
 
