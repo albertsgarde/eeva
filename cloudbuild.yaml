@@ -25,8 +25,6 @@ steps:
         "--container=eeva-backend",
         "--image=gcr.io/eeva-460211/eeva-backend",
         "--port=8000",
-        "--startup-probe",
-        "httpGet.path=/ready,httpGet.port=8000,initialDelaySeconds=20,failureThreshold=10",
         "--add-volume-mount=volume=prompts,mount-path=/prompts",
         "--add-volume-mount=volume=data,mount-path=/data",
         "--update-secrets=OPENAI_API_KEY=openai-prod-key:1",
