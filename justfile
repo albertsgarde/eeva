@@ -12,9 +12,13 @@ frontend HOSTNAME="localhost" PORT="5173":
 f HOSTNAME="localhost" PORT="5173": 
     just frontend {{HOSTNAME}} {{PORT}}
 
+pull:
+    jj git fetch
+    jj new main
+
 update:
-    git reset --hard
-    git pull
+    jj abandon
+    just pull
     uv build --project python
     uv sync --project python
 
