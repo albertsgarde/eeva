@@ -1,0 +1,7 @@
+defaults:
+  - override hydra/job_logging: custom
+  - _self_
+
+hydra:
+  run:
+    dir: ./output/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
