@@ -9,3 +9,5 @@ identity_extraction_prompt_path: "identity_extraction"
 explicit_cot: true
 
 num_tests: 3
+
+answer_progress_minimum: 0.7

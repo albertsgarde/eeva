@@ -51,6 +51,7 @@ def update_data(secrets_path: Path, output_path: Path):
             "profile": ProdProfile.model_validate(user["profile"]) if user["profile"] else None,
             "answers": user_answer_lists[user_id],
             "language_code": user["language_code"],
+            "hidden": user["hidden"],
         }
 
     raw_question_data = sb_client.table("questions").select("id,active").execute().data
@@ -113,6 +114,7 @@ def update_data(secrets_path: Path, output_path: Path):
             response=response,
             prod_profile=user["profile"],
             language_code=user["language_code"],
+            hidden=user["hidden"],
         )
 
     user_data = UserSet(user_dict)

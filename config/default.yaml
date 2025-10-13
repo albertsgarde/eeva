@@ -8,3 +8,11 @@ hydra:
 
 data_dir: "data"
 secrets_path: "secrets.json"
+
+exclude_questions: []
+include_questions: null
+
+exclude_users: []
+include_users: null
+answer_progress_minimum: 0.0
+num_answers_minimum: 1

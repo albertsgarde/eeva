@@ -12,7 +12,30 @@ from langchain import chat_models
 from pydantic import BaseModel, Field
 
 from .analyzer import AnalysisResult, Analyzer
-from .types import BaseData, Couple, CoupleId, User, UserId, UserSet
+from .types import BaseData, Couple, CoupleId, QuestionId, QuestionResponse, QuestionSet, User, UserId, UserSet
+
+
+class RunConfig(BaseModel):
+    secrets_path: Path = Field()
+    data_dir: Path = Field()
+    output_dir: Path = Field()
+
+    model: str = Field()
+    model_provider: str = Field()
+    reasoning_effort: str = Field()
+    identity_prompt: str = Field()
+    identity_extraction_prompt: str = Field()
+    explicit_cot: bool = Field()
+
+    num_tests: int = Field(gt=0)
+
+    exclude_questions: set[QuestionId] = Field()
+    include_questions: set[QuestionId] | None = Field()
+
+    exclude_users: set[UserId] = Field()
+    include_users: set[UserId] | None = Field()
+    answer_progress_minimum: float = Field(ge=0)
+    num_answers_minimum: int = Field(ge=1)
 
 
 async def generate_user_profiles(
@@ -47,19 +70,51 @@ async def generate_profiles(
     return profiles
 
 
-class RunConfig(BaseModel):
-    secrets_path: Path = Field()
-    data_dir: Path = Field()
-    output_dir: Path = Field()
+def filter_questions(questions: QuestionSet, config: RunConfig) -> QuestionSet:
+    return QuestionSet(
+        {
+            q_id: q
+            for q_id, q in questions.items()
+            if q_id not in config.exclude_questions
+            and (config.include_questions is None or q_id in config.include_questions)
+        }
+    )
 
-    model: str = Field()
-    model_provider: str = Field()
-    reasoning_effort: str = Field()
-    identity_prompt: str = Field()
-    identity_extraction_prompt: str = Field()
-    explicit_cot: bool = Field()
 
-    num_tests: int = Field(gt=0)
+def word_count(text: str) -> int:
+    # Translation of the JS   const wordCount = text.trim().split(/\s+/).length; to Python
+    return len(text.strip().split())
+
+
+def answer_progress(response: QuestionResponse, examples: list[str]) -> float:
+    if not examples:
+        raise ValueError("No examples provided for progress calculation.")
+    response_length = word_count(response.response)
+    examples_length_max = np.max([word_count(example) for example in examples])
+    return response_length / examples_length_max
+
+
+def filter_users(users: UserSet, questions: QuestionSet, config: RunConfig) -> UserSet:
+    users = UserSet(
+        {
+            user_id: user
+            for user_id, user in users.items()
+            if user_id not in config.exclude_users and (config.include_users is None or user_id in config.include_users)
+        }
+    )
+    for user in users.values():
+        language_code = user.language_code
+        user.response.responses = {
+            q_id: resp
+            for q_id, resp in user.response.responses.items()
+            if q_id in questions
+            and answer_progress(resp, questions[q_id].translations[language_code].examples)
+            >= config.answer_progress_minimum
+        }
+    users = UserSet(
+        {user_id: user for user_id, user in users.items() if len(user.response.responses) >= config.num_answers_minimum}
+    )
+    return users
 
 
 def run(config: RunConfig) -> None:
@@ -79,11 +134,22 @@ def run(config: RunConfig) -> None:
     with (config.data_dir / "base_data.json").open("r", encoding="utf-8") as f:
         base_data = BaseData.model_validate_json(f.read())
 
-        user_data = base_data.users
+        questions = filter_questions(base_data.questions, config)
+        logging.info(f"Loaded {len(questions)} questions after filtering from {len(base_data.questions)} total.")
+        users = filter_users(base_data.users, questions, config)
+        logging.info(f"Loaded {len(users)} users after filtering from {len(base_data.users)} total.")
+        removed_users = set(base_data.users.keys()) - set(users.keys())
+        for removed_user in removed_users:
+            logging.debug(f"Removed user {removed_user} due to filtering.")
 
     with (config.data_dir / "couples.json").open("r", encoding="utf-8") as f:
-        couple_pairs_raw: dict[CoupleId, list[str]] = json.load(f)
-        couple_pairs: dict[CoupleId, Couple] = {k: (UserId(v[0]), UserId(v[1])) for k, v in couple_pairs_raw.items()}
+        couple_pairs_raw: dict[CoupleId, list[UserId]] = {
+            CoupleId(couple_id): [UserId(user_id) for user_id in ids] for couple_id, ids in json.load(f).items()
+        }
+        couple_pairs: dict[CoupleId, Couple] = {
+            k: (v[0], v[1]) for k, v in couple_pairs_raw.items() if v[0] in users and v[1] in users
+        }
+        logging.info(f"Loaded {len(couple_pairs)} couples from {len(couple_pairs_raw)} total.")
 
     analyzer = Analyzer(
         identity_prompt=config.identity_prompt,
@@ -92,15 +158,15 @@ def run(config: RunConfig) -> None:
         llm=llm,
     )
 
-    logging.info(f"Generating {config.num_tests} profiles per user for {len(user_data)} users...")
+    logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time
     time_started = datetime.now()
     result: dict[UserId, list[AnalysisResult]] = asyncio.run(
-        generate_profiles(analyzer, user_data, config.num_tests, user_subset=None)
+        generate_profiles(analyzer, users, config.num_tests, user_subset=None)
     )
     time_ended = datetime.now()
     logging.info(
-        f"Generated profiles for {len(user_data)} users in {(time_ended - time_started).total_seconds():.2f} seconds."
+        f"Generated profiles for {len(users)} users in {(time_ended - time_started).total_seconds():.2f} seconds."
     )
 
     analysis_dump = {key.model_dump(): [r.model_dump() for r in value] for key, value in result.items()}
@@ -110,8 +176,8 @@ def run(config: RunConfig) -> None:
     logging.info(f"Wrote analysis results to {analysis_dump_path}")
 
     user_id_list = [
-        (user_id, f"{user_data[user_id].response.first_name} {user_data[user_id].response.last_name}")
-        for user_id in user_data.keys()
+        (user_id, f"{users[user_id].response.first_name} {users[user_id].response.last_name}")
+        for user_id in users.keys()
     ]
 
     user_id_to_index = {user_id: i for i, (user_id, _) in enumerate(user_id_list)}

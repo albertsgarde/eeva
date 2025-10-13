@@ -40,6 +40,7 @@ class User(BaseModel):
     response: Response = Field()
     prod_profile: ProdProfile | None = Field()
     language_code: LanguageCode = Field()
+    hidden: bool = Field()
 
 
 class UserSet(RootModel):
@@ -91,6 +92,9 @@ class QuestionSet(RootModel):
 
     def __contains__(self, item: QuestionId) -> bool:
         return item in self.root
+
+    def __len__(self) -> int:
+        return len(self.root)
 
     def items(self):
         return self.root.items()
