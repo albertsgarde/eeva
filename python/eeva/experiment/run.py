@@ -6,10 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+import matplotlib.pyplot as plt
 import numpy as np
 import tabulate
 from langchain import chat_models
-from pydantic import BaseModel, Field
+from matplotlib.figure import Figure
+from pydantic import BaseModel, Field, RootModel
 
 from .analyzer import AnalysisResult, Analyzer
 from .types import BaseData, Couple, CoupleId, QuestionId, QuestionResponse, QuestionSet, User, UserId, UserSet
@@ -117,6 +119,54 @@ def filter_users(users: UserSet, questions: QuestionSet, config: RunConfig) -> U
     return users
 
 
+class AnalysisResultSet(RootModel):
+    root: dict[UserId, list[AnalysisResult]]
+
+    def __getitem__(self, item: UserId) -> list[AnalysisResult]:
+        return self.root[item]
+
+    def __iter__(self):
+        return iter(self.root.items())
+
+    def __contains__(self, item: UserId) -> bool:
+        return item in self.root
+
+    def __len__(self) -> int:
+        return len(self.root)
+
+    def items(self):
+        return self.root.items()
+
+    def keys(self):
+        return self.root.keys()
+
+    def values(self):
+        return self.root.values()
+
+
+def identity_histogram(analysis_results: AnalysisResultSet) -> Figure:
+    """Create a histogram plot of identity values from analysis results.
+
+    Returns a matplotlib figure that can be saved with fig.savefig() or displayed.
+    """
+
+    # Extract all identity values from analysis results
+    identity_values = []
+    for user_results in analysis_results.values():
+        for result in user_results:
+            identity_values.append(result.profile.identity)
+
+    # Create histogram
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(identity_values, bins=20, alpha=0.7, edgecolor="black")
+    ax.set_xlabel("Identity Value")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Distribution of Identity Values")
+    ax.grid(True, alpha=0.3)
+
+    return fig
+
+
 def run(config: RunConfig) -> None:
     with config.secrets_path.open("r") as f:
         secrets = json.load(f)
@@ -161,19 +211,23 @@ def run(config: RunConfig) -> None:
     logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time
     time_started = datetime.now()
-    result: dict[UserId, list[AnalysisResult]] = asyncio.run(
-        generate_profiles(analyzer, users, config.num_tests, user_subset=None)
+    result: AnalysisResultSet = AnalysisResultSet(
+        asyncio.run(generate_profiles(analyzer, users, config.num_tests, user_subset=None))
     )
     time_ended = datetime.now()
     logging.info(
         f"Generated profiles for {len(users)} users in {(time_ended - time_started).total_seconds():.2f} seconds."
     )
 
-    analysis_dump = {key.model_dump(): [r.model_dump() for r in value] for key, value in result.items()}
     analysis_dump_path = config.output_dir / "analysis.json"
     with analysis_dump_path.open("w", encoding="utf-8") as f:
-        json.dump(analysis_dump, f, indent=2)
+        json.dump(result.model_dump(), f, indent=2)
     logging.info(f"Wrote analysis results to {analysis_dump_path}")
+
+    fig = identity_histogram(result)
+    histogram_path = config.output_dir / "identity_histogram.png"
+    fig.savefig(histogram_path)
+    logging.info(f"Wrote identity histogram to {histogram_path}")
 
     user_id_list = [
         (user_id, f"{users[user_id].response.first_name} {users[user_id].response.last_name}")

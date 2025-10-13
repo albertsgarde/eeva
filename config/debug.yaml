@@ -10,4 +10,7 @@ explicit_cot: true
 
 num_tests: 3
 
+include_users:
+  - 94a72be8-ef68-4fd2-bc89-6a71995c1425
+  - c6151208-4b40-478e-a7e4-152dca25c4d6
 answer_progress_minimum: 0.7
