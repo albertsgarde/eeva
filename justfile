@@ -35,5 +35,8 @@ agent:
 hydra *ARGS:
     uv --project python run -m eeva.experiment {{ARGS}}
 
+alias run := hydra
+alias r := hydra
+
 update-data:
     uv --project python run -m eeva.experiment.fetch_data
