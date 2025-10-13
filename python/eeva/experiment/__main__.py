@@ -29,6 +29,7 @@ class Config:
 
     exclude_users: list[str]
     include_users: list[str] | None
+    only_couples: bool
     answer_progress_minimum: float
     num_answers_minimum: int
 
@@ -66,6 +67,7 @@ def main(cfg: Config) -> None:
             include_questions={QuestionId(qid) for qid in cfg.include_questions} if cfg.include_questions else None,
             exclude_users={UserId(uid) for uid in cfg.exclude_users},
             include_users={UserId(uid) for uid in cfg.include_users} if cfg.include_users else None,
+            only_couples=cfg.only_couples,
             answer_progress_minimum=cfg.answer_progress_minimum,
             num_answers_minimum=cfg.num_answers_minimum,
         )

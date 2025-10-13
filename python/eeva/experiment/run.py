@@ -14,7 +14,17 @@ from matplotlib.figure import Figure
 from pydantic import BaseModel, Field, RootModel
 
 from .analyzer import AnalysisResult, Analyzer
-from .types import BaseData, Couple, CoupleId, QuestionId, QuestionResponse, QuestionSet, User, UserId, UserSet
+from .types import (
+    BaseData,
+    CoupleId,
+    CouplePairs,
+    QuestionId,
+    QuestionResponse,
+    QuestionSet,
+    User,
+    UserId,
+    UserSet,
+)
 
 
 class RunConfig(BaseModel):
@@ -36,6 +46,7 @@ class RunConfig(BaseModel):
 
     exclude_users: set[UserId] = Field()
     include_users: set[UserId] | None = Field()
+    only_couples: bool = Field()
     answer_progress_minimum: float = Field(ge=0)
     num_answers_minimum: int = Field(ge=1)
 
@@ -84,7 +95,6 @@ def filter_questions(questions: QuestionSet, config: RunConfig) -> QuestionSet:
 
 
 def word_count(text: str) -> int:
-    # Translation of the JS   const wordCount = text.trim().split(/\s+/).length; to Python
     return len(text.strip().split())
 
 
@@ -96,7 +106,9 @@ def answer_progress(response: QuestionResponse, examples: list[str]) -> float:
     return response_length / examples_length_max
 
 
-def filter_users(users: UserSet, questions: QuestionSet, config: RunConfig) -> UserSet:
+def filter_users(
+    users: UserSet, questions: QuestionSet, couple_pairs: CouplePairs, config: RunConfig
+) -> tuple[UserSet, CouplePairs]:
     users = UserSet(
         {
             user_id: user
@@ -116,7 +128,14 @@ def filter_users(users: UserSet, questions: QuestionSet, config: RunConfig) -> U
     users = UserSet(
         {user_id: user for user_id, user in users.items() if len(user.response.responses) >= config.num_answers_minimum}
     )
-    return users
+    couple_pairs = CouplePairs(
+        {couple_id: (id1, id2) for couple_id, (id1, id2) in couple_pairs.items() if id1 in users and id2 in users}
+    )
+    couple_users = {user_id for couple in couple_pairs.values() for user_id in couple}
+    users = UserSet(
+        {user_id: user for user_id, user in users.items() if not config.only_couples or user_id in couple_users}
+    )
+    return users, couple_pairs
 
 
 class AnalysisResultSet(RootModel):
@@ -181,24 +200,23 @@ def run(config: RunConfig) -> None:
         config.model, model_provider=config.model_provider, reasoning_effort=config.reasoning_effort
     )
 
+    with (config.data_dir / "couples.json").open("r", encoding="utf-8") as f:
+        couple_pairs_raw: CouplePairs = {
+            CoupleId(couple_id): (UserId(id1), UserId(id2)) for couple_id, (id1, id2) in json.load(f).items()
+        }
+
     with (config.data_dir / "base_data.json").open("r", encoding="utf-8") as f:
         base_data = BaseData.model_validate_json(f.read())
 
         questions = filter_questions(base_data.questions, config)
         logging.info(f"Loaded {len(questions)} questions after filtering from {len(base_data.questions)} total.")
-        users = filter_users(base_data.users, questions, config)
+
+        users, couple_pairs = filter_users(base_data.users, questions, couple_pairs_raw, config)
         logging.info(f"Loaded {len(users)} users after filtering from {len(base_data.users)} total.")
         removed_users = set(base_data.users.keys()) - set(users.keys())
         for removed_user in removed_users:
             logging.debug(f"Removed user {removed_user} due to filtering.")
 
-    with (config.data_dir / "couples.json").open("r", encoding="utf-8") as f:
-        couple_pairs_raw: dict[CoupleId, list[UserId]] = {
-            CoupleId(couple_id): [UserId(user_id) for user_id in ids] for couple_id, ids in json.load(f).items()
-        }
-        couple_pairs: dict[CoupleId, Couple] = {
-            k: (v[0], v[1]) for k, v in couple_pairs_raw.items() if v[0] in users and v[1] in users
-        }
         logging.info(f"Loaded {len(couple_pairs)} couples from {len(couple_pairs_raw)} total.")
 
     analyzer = Analyzer(

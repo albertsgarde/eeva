@@ -22,5 +22,6 @@ include_questions: null
 
 exclude_users: []
 include_users: null
+only_couples: false
 answer_progress_minimum: 0.0
 num_answers_minimum: 1
