@@ -2,9 +2,6 @@ defaults:
   - default
   - _self_
 
-secrets_path: "secrets.json"
-data_dir: "data"
-
 model: "gpt-5-nano:openai"
 reasoning_effort: "minimal"
 identity_prompt_path: "identity"

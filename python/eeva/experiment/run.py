@@ -9,10 +9,10 @@ from typing import Callable
 import numpy as np
 import tabulate
 from langchain import chat_models
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 from .analyzer import AnalysisResult, Analyzer
-from .types import Couple, CoupleId, User, UserId
+from .types import BaseData, Couple, CoupleId, User, UserId, UserSet
 
 
 async def generate_user_profiles(
@@ -28,10 +28,10 @@ async def generate_user_profiles(
 # Create a dict user_id -> Profile for all users in user_data using their responses to run `analyze`
 # Use asyncio to run analyze concurrently for all users
 async def generate_profiles(
-    analyzer: Analyzer, user_data: dict[UserId, User], num_profiles: int, user_subset: set[UserId] | None
+    analyzer: Analyzer, user_data: UserSet, num_profiles: int, user_subset: set[UserId] | None
 ) -> dict[UserId, list[AnalysisResult]]:
     if user_subset is not None:
-        user_data = {k: v for k, v in user_data.items() if k in user_subset}
+        user_data = UserSet({k: v for k, v in user_data.items() if k in user_subset})
 
     profiles: dict[UserId, list[AnalysisResult]] = {}
 
@@ -76,16 +76,14 @@ def run(config: RunConfig) -> None:
         config.model, model_provider=config.model_provider, reasoning_effort=config.reasoning_effort
     )
 
-    with (config.data_dir / "user_data.json").open("r", encoding="utf-8") as f:
+    with (config.data_dir / "base_data.json").open("r", encoding="utf-8") as f:
+        base_data = BaseData.model_validate_json(f.read())
 
-        class UserSetDeserializer(RootModel[dict[UserId, User]]):
-            pass
-
-        user_data = UserSetDeserializer.model_validate_json(f.read()).root
+        user_data = base_data.users
 
     with (config.data_dir / "couples.json").open("r", encoding="utf-8") as f:
-        couple_pairs_raw: dict[CoupleId, list[UserId]] = json.load(f)
-        couple_pairs: dict[CoupleId, Couple] = {k: (v[0], v[1]) for k, v in couple_pairs_raw.items()}
+        couple_pairs_raw: dict[CoupleId, list[str]] = json.load(f)
+        couple_pairs: dict[CoupleId, Couple] = {k: (UserId(v[0]), UserId(v[1])) for k, v in couple_pairs_raw.items()}
 
     analyzer = Analyzer(
         identity_prompt=config.identity_prompt,
@@ -105,7 +103,7 @@ def run(config: RunConfig) -> None:
         f"Generated profiles for {len(user_data)} users in {(time_ended - time_started).total_seconds():.2f} seconds."
     )
 
-    analysis_dump = {key: [r.model_dump() for r in value] for key, value in result.items()}
+    analysis_dump = {key.model_dump(): [r.model_dump() for r in value] for key, value in result.items()}
     analysis_dump_path = config.output_dir / "analysis.json"
     with analysis_dump_path.open("w", encoding="utf-8") as f:
         json.dump(analysis_dump, f, indent=2)
