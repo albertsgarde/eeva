@@ -226,6 +226,12 @@ def run(config: RunConfig) -> None:
         llm=llm,
     )
 
+    with (config.output_dir / "identity_prompt.txt").open("w", encoding="utf-8") as f:
+        f.write(config.identity_prompt)
+
+    with (config.output_dir / "identity_extraction_prompt.txt").open("w", encoding="utf-8") as f:
+        f.write(config.identity_extraction_prompt)
+
     logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time
     time_started = datetime.now()
