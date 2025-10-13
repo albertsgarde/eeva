@@ -20,6 +20,7 @@ prompts/**
 
 config/**
 !config/default.yaml
+!config/example.yaml
 !config/hydra
 
 analyzer_dev_real.ipynb
