@@ -18,5 +18,9 @@ prompts/**
 !prompts/default/
 !prompts/default/**
 
+config/**
+!config/default.yaml
+!config/hydra
+
 analyzer_dev_real.ipynb
 dev.ipynb
