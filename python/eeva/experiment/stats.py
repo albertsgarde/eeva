@@ -98,9 +98,9 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
     assert user_steps.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_steps.shape}"
     assert np.all(user_steps >= 1), f"{user_steps.shape}"
 
-    user_multipliers = len(user_id_list) / 2 / (user_steps)
-    assert user_multipliers.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_multipliers.shape}"
-    assert np.all(user_multipliers > 0), f"{user_multipliers.shape}"
+    user_factors = user_steps / (float(len(user_id_list)) / 2)
+    assert user_factors.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_factors.shape}"
+    assert np.all(user_factors > 0), f"{user_factors.shape}"
 
     couple_values = identity_values[couples_indices, :]
     assert couple_values.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{couple_values.shape}"
@@ -111,16 +111,17 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
 
     mean_value_std = np.mean(np.std(couple_values, axis=2)) * 100
     couples_report = f"Mean individual stddev: {mean_value_std:.4f}\n"
-    mean_multipliers = np.mean(user_multipliers, axis=(0, 1))
-    couples_report += f"Mean multipliers: {format_values(mean_multipliers, lambda x: f'{x:3.2f}')}\n"
+    mean_multipliers = np.reciprocal(np.mean(user_factors, axis=(0, 1)))
+    couples_report += f"Average multipliers: {format_values(mean_multipliers, lambda x: f'{x:3.2f}')}\n"
 
     table_data = []
-    for couple_id, dists, values, multipliers in zip(
-        couple_id_list, couple_dists, couple_values, user_multipliers, strict=True
+    for couple_id, dists, values, factors in zip(
+        couple_id_list, couple_dists, couple_values, user_factors, strict=True
     ):
         assert dists.shape == (config.num_tests + 2,), f"{dists.shape}"
         assert values.shape == (2, config.num_tests + 2), f"{values.shape}"
-        assert multipliers.shape == (2, config.num_tests + 2), f"{multipliers.shape}"
+        assert factors.shape == (2, config.num_tests + 2), f"{factors.shape}"
+        multipliers = np.reciprocal(factors)
 
         dist_str = format_values([s * 100 for s in dists[:]], lambda x: f"{x:2.0f}")
         value_str1 = format_values([v * 100 for v in values[0, :]], lambda x: f"{x:2.0f}")
