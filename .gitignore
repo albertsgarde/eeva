@@ -14,6 +14,8 @@ secrets.json
 
 output/
 data/**
+!data/question_sets/
+!data/question_sets/default_exclude.txt
 !data/user_sets/
 !data/user_sets/default_exclude.txt
 prompts/**
