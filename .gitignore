@@ -13,7 +13,9 @@ secrets.json
 .env
 
 output/
-data/
+data/**
+!data/user_sets/
+!data/user_sets/default_exclude.txt
 prompts/**
 !prompts/default/
 !prompts/default/**
