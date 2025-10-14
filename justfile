@@ -30,7 +30,7 @@ push BRANCH:
     jj git push
 
 agent:
-    uv run --project python -m eeva.analyzer_agent
+    uv run --project python -m eeva.experiment.analyzer_agent
 
 hydra CONFIG *ARGS:
     uv --project python run -m eeva.experiment --config-name={{CONFIG}} {{ARGS}}
