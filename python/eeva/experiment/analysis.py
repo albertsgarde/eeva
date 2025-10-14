@@ -1,15 +1,15 @@
 import asyncio
 
-from langchain.chat_models.base import BaseChatModel
-from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, RootModel
 
+from ..models import Model, ResponseMetadata
 from .types import Profile, Response, User, UserId, UserSet
 
 
 class AnalysisResult(BaseModel):
     profile: Profile = Field()
     cot: str | None = Field()
+    response_metadata: ResponseMetadata = Field()
 
 
 class AnalysisResultUser(BaseModel):
@@ -47,7 +47,7 @@ class Analyzer(BaseModel):
     identity_prompt: str = Field()
     identity_extraction_prompt: str = Field()
     explicit_cot: bool = Field(default=False)
-    llm: BaseChatModel = Field()
+    llm: Model = Field()
 
     async def analyze(self, response: Response) -> AnalysisResult:
         class CotAnalyzerOutput(BaseModel):
@@ -63,15 +63,10 @@ class Analyzer(BaseModel):
 
         output_type = CotAnalyzerOutput if self.explicit_cot else AnalyzerOutput
 
-        structured_llm = self.llm.with_structured_output(output_type)
-
         content = "\n".join(f"{question.question}: {question.response}" for question in response.responses.values())
 
-        raw_output = await structured_llm.ainvoke(
-            [
-                HumanMessage(content=content),
-            ]
-        )
+        raw_output, usage_data = await self.llm.get_structured_output(content, output_type)
+
         if isinstance(raw_output, dict):
             output = output_type(**raw_output)
         elif isinstance(raw_output, output_type):
@@ -83,7 +78,7 @@ class Analyzer(BaseModel):
 
         cot = output.identity_cot if self.explicit_cot else None  # type: ignore
 
-        return AnalysisResult(profile=profile, cot=cot)
+        return AnalysisResult(profile=profile, cot=cot, response_metadata=usage_data)
 
 
 async def generate_user_profiles(

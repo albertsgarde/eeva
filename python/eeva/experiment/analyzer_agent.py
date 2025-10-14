@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, RootModel
 
 from eeva import utils
 from eeva.analyzer import Response
-from eeva.utils import Model
+from eeva.models import ModelSpecifier
 
 
 class Profile(BaseModel):
@@ -70,16 +70,16 @@ class Config(BaseModel):
     num_test_samples: int = Field(gt=0, description="Number of samples to generate per user")
     max_iters: int = Field(gt=0, description="Maximum number of agent iterations")
     timeout: float = Field(ge=0, description="Timeout for each test in seconds")
-    analyzer_model: Model = Field(description="LLM to use for the analyzer")
-    agent_model: Model = Field(description="LLM to use for the agent")
+    analyzer_model: ModelSpecifier = Field(description="LLM to use for the analyzer")
+    agent_model: ModelSpecifier = Field(description="LLM to use for the agent")
 
 
 CONFIG = Config(
     num_test_samples=5,
     max_iters=5,
     timeout=120,
-    analyzer_model=Model(model_name="gpt-5-nano", model_provider="openai"),
-    agent_model=Model(model_name="gpt-5-nano", model_provider="openai"),
+    analyzer_model=ModelSpecifier(name="gpt-5-nano", provider="openai"),
+    agent_model=ModelSpecifier(name="gpt-5-nano", provider="openai"),
 )
 
 WORKSPACE_DIR = Path(".").resolve()
@@ -141,8 +141,8 @@ class TestResult(BaseModel):
 
 
 class LogEntry(BaseModel):
-    analyzer_model: Model = Field()
-    agent_model: Model = Field()
+    analyzer_model: ModelSpecifier = Field()
+    agent_model: ModelSpecifier = Field()
     result: TestResult = Field()
     identity_prompt: str = Field()
 
@@ -160,8 +160,8 @@ async def log(identity_prompt: str, result: TestResult) -> None:
 
 async def log_err(identity_prompt: str, error: str) -> None:
     entry = {
-        "analyzer_model": CONFIG.analyzer_model.model_name,
-        "agent_model": CONFIG.agent_model.model_name,
+        "analyzer_model": CONFIG.analyzer_model.name,
+        "agent_model": CONFIG.agent_model.name,
         "error": error,
         "identity_prompt": identity_prompt,
     }
@@ -309,7 +309,7 @@ TOOLS = [test_prompt]
 # --- Agent construction -----------------------------------------------
 
 
-def build_agent(model: Model):
+def build_agent(model: ModelSpecifier):
     llm = model.init_chat_model()
 
     with open(PROMPT_DIR / "agent_system_prompt.txt", "r", encoding="utf-8") as f:

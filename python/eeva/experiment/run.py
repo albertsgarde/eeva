@@ -5,8 +5,9 @@ import os
 from datetime import datetime
 
 import numpy as np
-from langchain import chat_models
 
+from .. import models
+from ..models import Model, ModelSpecifier
 from . import analysis, stats
 from .analysis import AnalysisResultSet, Analyzer
 from .types import (
@@ -107,6 +108,49 @@ def filter_users(
     return users, couple_pairs
 
 
+def usage_report(analysis_results: AnalysisResultSet, model_specifier: ModelSpecifier) -> str:
+    total_non_cached_input_tokens = sum(
+        result.response_metadata.input_tokens
+        for user_result in analysis_results.values()
+        for result in user_result.analysis_results
+    )
+    total_cached_input_tokens = sum(
+        result.response_metadata.cached_input_tokens
+        for user_result in analysis_results.values()
+        for result in user_result.analysis_results
+    )
+    total_output_tokens = sum(
+        result.response_metadata.output_tokens
+        for user_result in analysis_results.values()
+        for result in user_result.analysis_results
+    )
+    total_reasoning_tokens = sum(
+        result.response_metadata.reasoning_tokens
+        for user_result in analysis_results.values()
+        for result in user_result.analysis_results
+    )
+
+    pricing_info = models.model_pricing[model_specifier]
+    total_cost = pricing_info.calculate(total_non_cached_input_tokens, total_cached_input_tokens, total_output_tokens)
+
+    non_cached_cost_percentage = (
+        (100 * pricing_info.input * total_non_cached_input_tokens / total_cost) if total_cost > 0 else 0
+    )
+    cached_cost_percentage = (
+        (100 * pricing_info.cached_input * total_cached_input_tokens / total_cost) if total_cost > 0 else 0
+    )
+    output_cost_percentage = (100 * pricing_info.output * total_output_tokens / total_cost) if total_cost > 0 else 0
+    reasoning_cost_percentage = (
+        (100 * pricing_info.input * total_reasoning_tokens / total_cost) if total_cost > 0 else 0
+    )
+    return f"""Estimated overall cost: {total_cost:.2f}$
+Total non-cached input tokens: {total_non_cached_input_tokens} ({non_cached_cost_percentage:.1f}%)
+Total cached input tokens: {total_cached_input_tokens} ({cached_cost_percentage:.1f}%)
+Total output tokens: {total_output_tokens} ({output_cost_percentage:.1f}%)
+    Total implicit reasoning tokens: {total_reasoning_tokens} ({reasoning_cost_percentage:.1f}%)
+"""
+
+
 def run(config: RunConfig) -> None:
     with config.secrets_path.open("r") as f:
         secrets = json.load(f)
@@ -117,8 +161,12 @@ def run(config: RunConfig) -> None:
         if secrets["GEMINI_API_KEY"]:
             os.environ["GEMINI_API_KEY"] = secrets["GEMINI_API_KEY"]
 
-    llm = chat_models.init_chat_model(
-        config.model, model_provider=config.model_provider, reasoning_effort=config.reasoning_effort
+    llm = Model.from_specifier(
+        ModelSpecifier(
+            name=config.model,
+            provider=config.model_provider,
+        ),
+        reasoning_effort=config.reasoning_effort,
     )
 
     with (config.data_dir / "couples.json").open("r", encoding="utf-8") as f:
@@ -176,3 +224,9 @@ def run(config: RunConfig) -> None:
     logging.info(f"Wrote identity histogram to {histogram_path}")
 
     stats.analyze(result, users, couple_pairs, config)
+
+    cost_report = usage_report(result, llm.specifier)
+    cost_report_path = config.output_dir / "usage_report.txt"
+    with cost_report_path.open("w", encoding="utf-8") as f:
+        f.write(cost_report)
+    logging.info(f"Wrote usage report to {cost_report_path}")
