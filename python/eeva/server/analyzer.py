@@ -7,10 +7,8 @@ from langchain.chat_models.base import BaseChatModel
 from eeva import analyzer
 from eeva.analyzer import Profile, RelationshipProfile, Response
 
-from .database import Database
 
-
-def create_router(database: Database, llm: BaseChatModel, data_path: Path) -> APIRouter:
+def create_router(llm: BaseChatModel, data_path: Path) -> APIRouter:
     router = APIRouter()
 
     @router.post("/analyze")
