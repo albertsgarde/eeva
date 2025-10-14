@@ -1,4 +1,5 @@
-from typing import Annotated, Awaitable, Callable
+from pathlib import Path
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
@@ -117,4 +118,25 @@ class BaseData(BaseModel):
     questions: QuestionSet = Field()
 
 
-Analyzer = Callable[[Response], Awaitable[Profile]]
+class RunConfig(BaseModel):
+    secrets_path: Path = Field()
+    data_dir: Path = Field()
+    output_dir: Path = Field()
+
+    model: str = Field()
+    model_provider: str = Field()
+    reasoning_effort: str = Field()
+    identity_prompt: str = Field()
+    identity_extraction_prompt: str = Field()
+    explicit_cot: bool = Field()
+
+    num_tests: int = Field(gt=0)
+
+    question_exclusion_sets: set[str] = Field()
+    question_inclusion_sets: set[str] | None = Field()
+
+    user_exclusion_sets: set[str] = Field()
+    user_inclusion_sets: set[str] | None = Field()
+    only_couples: bool = Field()
+    answer_progress_minimum: float = Field(ge=0)
+    num_answers_minimum: int = Field(ge=1)
