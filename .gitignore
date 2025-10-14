@@ -18,9 +18,6 @@ data/**
 !data/question_sets/default_exclude.txt
 !data/user_sets/
 !data/user_sets/default_exclude.txt
-prompts/**
-!prompts/default/
-!prompts/default/**
 
 config/**
 !config/default.yaml

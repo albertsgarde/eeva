@@ -3,7 +3,6 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     args: ["compose", "-f", "docker/compose.yaml", "build"]
     env:
-      - "PROMPT_DIR=prompts/"
       - "DATA_PATH=data/"
   - name: "gcr.io/cloud-builders/docker"
     args: ["tag", "eeva-backend", "gcr.io/eeva-460211/eeva-backend"]
@@ -20,11 +19,9 @@ steps:
         "--service-account=cd-builder@eeva-460211.iam.gserviceaccount.com",
         "--min-instances=0",
         "--concurrency=80",
-        "--add-volume=name=prompts,type=cloud-storage,bucket=eeva-prompts",
         "--add-volume=name=data,type=cloud-storage,bucket=eeva-data",
         "--image=gcr.io/eeva-460211/eeva-backend",
         "--port=8000",
-        "--add-volume-mount=volume=prompts,mount-path=/prompts",
         "--add-volume-mount=volume=data,mount-path=/data",
         "--update-secrets=OPENAI_API_KEY=openai-prod-key:1",
       ]

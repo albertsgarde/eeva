@@ -19,7 +19,6 @@ RUN uv sync --locked --no-dev
 # Place executables in the environment at the front of the path
 ENV PATH="/eeva/.venv/bin:$PATH"
 ENV DATA_PATH="/data"
-ENV PROMPT_DIR="/prompts"
 ENV OPENAI_API_KEY=""
 
 # Reset the entrypoint, don't invoke `uv`
