@@ -12,10 +12,16 @@ class AnalysisResult(BaseModel):
     cot: str | None = Field()
 
 
-class AnalysisResultSet(RootModel):
-    root: dict[UserId, list[AnalysisResult]]
+class AnalysisResultUser(BaseModel):
+    first_name: str = Field()
+    last_name: str = Field()
+    analysis_results: list[AnalysisResult] = Field()
 
-    def __getitem__(self, item: UserId) -> list[AnalysisResult]:
+
+class AnalysisResultSet(RootModel):
+    root: dict[UserId, AnalysisResultUser] = Field()
+
+    def __getitem__(self, item: UserId) -> AnalysisResultUser:
         return self.root[item]
 
     def __iter__(self):
@@ -82,31 +88,32 @@ class Analyzer(BaseModel):
 
 async def generate_user_profiles(
     analyzer: Analyzer, user_id: UserId, user: User, num_profiles: int
-) -> tuple[UserId, list[AnalysisResult]]:
+) -> tuple[UserId, AnalysisResultUser]:
     tasks = []
     for _ in range(num_profiles):
         tasks.append(asyncio.create_task(analyzer.analyze(user.response)))
     profiles = await asyncio.gather(*tasks)
-    return (user_id, profiles)
+    result_user = AnalysisResultUser(
+        first_name=user.response.first_name,
+        last_name=user.response.last_name,
+        analysis_results=profiles,
+    )
+    return (user_id, result_user)
 
 
 # Create a dict user_id -> Profile for all users in user_data using their responses to run `analyze`
 # Use asyncio to run analyze concurrently for all users
 async def generate_profiles(
     analyzer: Analyzer, user_data: UserSet, num_profiles: int, user_subset: set[UserId] | None
-) -> dict[UserId, list[AnalysisResult]]:
+) -> AnalysisResultSet:
     if user_subset is not None:
         user_data = UserSet({k: v for k, v in user_data.items() if k in user_subset})
 
-    profiles: dict[UserId, list[AnalysisResult]] = {}
-
-    async def analyze_all_users() -> None:
+    async def analyze_all_users() -> AnalysisResultSet:
         tasks = []
         for user_id, user in user_data.items():
             tasks.append(asyncio.create_task(generate_user_profiles(analyzer, user_id, user, num_profiles)))
-        results: list[tuple[UserId, list[AnalysisResult]]] = await asyncio.gather(*tasks)
-        for user_id, user_profiles in results:
-            profiles[user_id] = user_profiles
+        results: list[tuple[UserId, AnalysisResultUser]] = await asyncio.gather(*tasks)
+        return AnalysisResultSet({user_id: result for user_id, result in results})
 
-    await analyze_all_users()
-    return profiles
+    return await analyze_all_users()

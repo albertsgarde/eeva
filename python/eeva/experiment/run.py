@@ -156,9 +156,10 @@ def run(config: RunConfig) -> None:
     logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time
     time_started = datetime.now()
-    result: AnalysisResultSet = AnalysisResultSet(
-        asyncio.run(analysis.generate_profiles(analyzer, users, config.num_tests, user_subset=None))
+    result: AnalysisResultSet = asyncio.run(
+        analysis.generate_profiles(analyzer, users, config.num_tests, user_subset=None)
     )
+
     time_ended = datetime.now()
     logging.info(
         f"Generated profiles for {len(users)} users in {(time_ended - time_started).total_seconds():.2f} seconds."

@@ -19,7 +19,7 @@ def identity_histogram(analysis_results: AnalysisResultSet) -> Figure:
     # Extract all identity values from analysis results
     identity_values = []
     for user_results in analysis_results.values():
-        for result in user_results:
+        for result in user_results.analysis_results:
             identity_values.append(result.profile.identity)
 
     # Create histogram
@@ -54,7 +54,9 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
     assert couples_indices.shape == (len(couple_pairs), 2), f"{couples_indices.shape}"
     assert np.all((0 <= couples_indices) & (couples_indices < len(user_id_list))), f"{couples_indices.shape}"
 
-    identity_values = np.array([[r.profile.identity for r in analysis_results[user_id]] for user_id, _ in user_id_list])
+    identity_values = np.array(
+        [[r.profile.identity for r in analysis_results[user_id].analysis_results] for user_id, _ in user_id_list]
+    )
 
     identity_values = np.concatenate(
         [
