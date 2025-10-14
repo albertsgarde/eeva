@@ -17,11 +17,12 @@ explicit_cot: true
 
 num_tests: 3
 
-exclude_questions: []
-include_questions: null
+question_exclusion_sets: []
+question_inclusion_sets: null
 
-exclude_users: []
-include_users: null
+user_exclusion_sets:
+  - default_exclude
+user_inclusion_sets: null
 only_couples: false
 answer_progress_minimum: 0.0
 num_answers_minimum: 1

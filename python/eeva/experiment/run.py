@@ -18,7 +18,6 @@ from .types import (
     BaseData,
     CoupleId,
     CouplePairs,
-    QuestionId,
     QuestionResponse,
     QuestionSet,
     User,
@@ -41,11 +40,11 @@ class RunConfig(BaseModel):
 
     num_tests: int = Field(gt=0)
 
-    exclude_questions: set[QuestionId] = Field()
-    include_questions: set[QuestionId] | None = Field()
+    question_exclusion_sets: set[str] = Field()
+    question_inclusion_sets: set[str] | None = Field()
 
-    exclude_users: set[UserId] = Field()
-    include_users: set[UserId] | None = Field()
+    user_exclusion_sets: set[str] = Field()
+    user_inclusion_sets: set[str] | None = Field()
     only_couples: bool = Field()
     answer_progress_minimum: float = Field(ge=0)
     num_answers_minimum: int = Field(ge=1)
@@ -84,12 +83,28 @@ async def generate_profiles(
 
 
 def filter_questions(questions: QuestionSet, config: RunConfig) -> QuestionSet:
+    exclusion_set = set().union(
+        *(
+            (config.data_dir / "question_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+            for set_name in config.question_exclusion_sets
+        )
+    )
+    inclusion_set = (
+        set().union(
+            *(
+                (config.data_dir / "question_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+                for set_name in config.question_inclusion_sets
+            )
+        )
+        if config.question_inclusion_sets
+        else None
+    )
+
     return QuestionSet(
         {
             q_id: q
             for q_id, q in questions.items()
-            if q_id not in config.exclude_questions
-            and (config.include_questions is None or q_id in config.include_questions)
+            if q_id not in exclusion_set and (inclusion_set is None or q_id in inclusion_set)
         }
     )
 
@@ -109,11 +124,26 @@ def answer_progress(response: QuestionResponse, examples: list[str]) -> float:
 def filter_users(
     users: UserSet, questions: QuestionSet, couple_pairs: CouplePairs, config: RunConfig
 ) -> tuple[UserSet, CouplePairs]:
+    exclusion_set: set[UserId] = {
+        UserId(line.strip())
+        for set_name in config.user_exclusion_sets
+        for line in (config.data_dir / "user_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+    }
+    inclusion_set: set[UserId] | None = (
+        {
+            UserId(line.strip())
+            for set_name in config.user_inclusion_sets
+            for line in (config.data_dir / "user_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+        }
+        if config.user_inclusion_sets
+        else None
+    )
+
     users = UserSet(
         {
             user_id: user
             for user_id, user in users.items()
-            if user_id not in config.exclude_users and (config.include_users is None or user_id in config.include_users)
+            if user_id not in exclusion_set and (inclusion_set is None or user_id in inclusion_set)
         }
     )
     for user in users.values():

@@ -8,7 +8,6 @@ from hydra.core.hydra_config import HydraConfig
 
 from . import run
 from .run import RunConfig
-from .types import QuestionId, UserId
 
 
 @dataclass
@@ -24,11 +23,11 @@ class Config:
 
     num_tests: int
 
-    exclude_questions: list[str]
-    include_questions: list[str] | None
+    question_exclusion_sets: list[str]
+    question_inclusion_sets: list[str] | None
 
-    exclude_users: list[str]
-    include_users: list[str] | None
+    user_exclusion_sets: list[str]
+    user_inclusion_sets: list[str] | None
     only_couples: bool
     answer_progress_minimum: float
     num_answers_minimum: int
@@ -63,10 +62,12 @@ def main(cfg: Config) -> None:
             .read_text(encoding="utf-8"),
             explicit_cot=cfg.explicit_cot,
             num_tests=cfg.num_tests,
-            exclude_questions={QuestionId(qid) for qid in cfg.exclude_questions},
-            include_questions={QuestionId(qid) for qid in cfg.include_questions} if cfg.include_questions else None,
-            exclude_users={UserId(uid) for uid in cfg.exclude_users},
-            include_users={UserId(uid) for uid in cfg.include_users} if cfg.include_users else None,
+            question_exclusion_sets={set_name for set_name in cfg.question_exclusion_sets},
+            question_inclusion_sets={set_name for set_name in cfg.question_inclusion_sets}
+            if cfg.question_inclusion_sets
+            else None,
+            user_exclusion_sets={set_name for set_name in cfg.user_exclusion_sets},
+            user_inclusion_sets={set_name for set_name in cfg.user_inclusion_sets} if cfg.user_inclusion_sets else None,
             only_couples=cfg.only_couples,
             answer_progress_minimum=cfg.answer_progress_minimum,
             num_answers_minimum=cfg.num_answers_minimum,
