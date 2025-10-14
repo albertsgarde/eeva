@@ -382,7 +382,7 @@ def run(config: RunConfig) -> None:
         table_data.append(
             [
                 couple_id,
-                f"{int(median_dist):<2}",
+                f"{median_dist:2.0f}",
                 dist_str,
                 f"{value_str1}\n{value_str2}",
                 (
