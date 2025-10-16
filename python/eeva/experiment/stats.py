@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 from .analysis import AnalysisResultSet
-from .types import CouplePairs, RunConfig, UserSet
+from .types import CouplePairs, RunConfig, UserId, UserSet
 
 
 def identity_histogram(analysis_results: AnalysisResultSet) -> Figure:
@@ -33,13 +33,22 @@ def identity_histogram(analysis_results: AnalysisResultSet) -> Figure:
     return fig
 
 
-def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: CouplePairs, config: RunConfig) -> None:
-    """Compute and log statistics from the analysis results."""
-
-    user_id_list = [
-        (user_id, f"{users[user_id].response.first_name} {users[user_id].response.last_name}")
-        for user_id in users.keys()
-    ]
+def analyze_inner(
+    identity_values: np.ndarray,
+    user_id_list: list[tuple[UserId, str]],
+    couple_pairs: CouplePairs,
+    num_tests: int,
+) -> str:
+    identity_values = np.concatenate(
+        [
+            np.median(identity_values, axis=1, keepdims=True),
+            identity_values.mean(axis=1, keepdims=True),
+            identity_values,
+        ],
+        axis=1,
+    )
+    assert identity_values.shape == (len(user_id_list), num_tests + 2), f"{identity_values.shape}"
+    assert np.all((0 <= identity_values) & (identity_values <= 1)), f"{identity_values.shape}"
 
     user_id_to_index = {user_id: i for i, (user_id, _) in enumerate(user_id_list)}
 
@@ -54,33 +63,18 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
     assert couples_indices.shape == (len(couple_pairs), 2), f"{couples_indices.shape}"
     assert np.all((0 <= couples_indices) & (couples_indices < len(user_id_list))), f"{couples_indices.shape}"
 
-    identity_values = np.array(
-        [[r.profile.identity for r in analysis_results[user_id].analysis_results] for user_id, _ in user_id_list]
-    )
-
-    identity_values = np.concatenate(
-        [
-            np.median(identity_values, axis=1, keepdims=True),
-            identity_values.mean(axis=1, keepdims=True),
-            identity_values,
-        ],
-        axis=1,
-    )
-    assert identity_values.shape == (len(user_id_list), config.num_tests + 2), f"{identity_values.shape}"
-    assert np.all((0 <= identity_values) & (identity_values <= 1)), f"{identity_values.shape}"
-
     all_dists = np.abs(
         identity_values[:, None, :] - identity_values[None, :, :]
     )  # shape (num_users, num_users, num_tests+2)
-    assert all_dists.shape == (len(user_id_list), len(user_id_list), config.num_tests + 2), f"{all_dists.shape}"
+    assert all_dists.shape == (len(user_id_list), len(user_id_list), num_tests + 2), f"{all_dists.shape}"
     assert np.all((0 <= all_dists) & (all_dists <= 1)), f"{all_dists.shape}"
 
     couple_dists = all_dists[couples_indices[:, 0], couples_indices[:, 1], :]  # shape (num_couples, num_tests+2)
-    assert couple_dists.shape == (len(couple_pairs), config.num_tests + 2), f"{couple_dists.shape}"
+    assert couple_dists.shape == (len(couple_pairs), num_tests + 2), f"{couple_dists.shape}"
     assert np.all((0 <= couple_dists) & (couple_dists <= 1)), f"{couple_dists.shape}"
 
     couple_all_dists = all_dists[couples_indices, :, :]
-    assert couple_all_dists.shape == (len(couple_pairs), 2, len(user_id_list), config.num_tests + 2), (
+    assert couple_all_dists.shape == (len(couple_pairs), 2, len(user_id_list), num_tests + 2), (
         f"{couple_all_dists.shape}"
     )
 
@@ -91,21 +85,21 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
 
     user_steps_exc = better_than_couple_exc.sum(axis=2)
     user_steps_inc = better_than_couple_inc.sum(axis=2)
-    assert user_steps_exc.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_steps_exc.shape}"
-    assert user_steps_inc.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_steps_inc.shape}"
+    assert user_steps_exc.shape == (len(couple_pairs), 2, num_tests + 2), f"{user_steps_exc.shape}"
+    assert user_steps_inc.shape == (len(couple_pairs), 2, num_tests + 2), f"{user_steps_inc.shape}"
     assert np.all(user_steps_exc >= 0), f"{user_steps_exc.shape}"
     assert np.all(user_steps_inc >= 2), f"{user_steps_inc.shape}"
 
     user_steps = (user_steps_exc + user_steps_inc) / 2
-    assert user_steps.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_steps.shape}"
+    assert user_steps.shape == (len(couple_pairs), 2, num_tests + 2), f"{user_steps.shape}"
     assert np.all(user_steps >= 1), f"{user_steps.shape}"
 
     user_factors = user_steps / (float(len(user_id_list)) / 2)
-    assert user_factors.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{user_factors.shape}"
+    assert user_factors.shape == (len(couple_pairs), 2, num_tests + 2), f"{user_factors.shape}"
     assert np.all(user_factors > 0), f"{user_factors.shape}"
 
     couple_values = identity_values[couples_indices, :]
-    assert couple_values.shape == (len(couple_pairs), 2, config.num_tests + 2), f"{couple_values.shape}"
+    assert couple_values.shape == (len(couple_pairs), 2, num_tests + 2), f"{couple_values.shape}"
 
     def format_values(dists: list[float], format_value: Callable[[float], str]) -> str:
         dists_string = " ".join(format_value(s) for s in dists[:2]) + "|" + " ".join(format_value(s) for s in dists[2:])
@@ -120,9 +114,9 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
     for couple_id, dists, values, factors in zip(
         couple_id_list, couple_dists, couple_values, user_factors, strict=True
     ):
-        assert dists.shape == (config.num_tests + 2,), f"{dists.shape}"
-        assert values.shape == (2, config.num_tests + 2), f"{values.shape}"
-        assert factors.shape == (2, config.num_tests + 2), f"{factors.shape}"
+        assert dists.shape == (num_tests + 2,), f"{dists.shape}"
+        assert values.shape == (2, num_tests + 2), f"{values.shape}"
+        assert factors.shape == (2, num_tests + 2), f"{factors.shape}"
         multipliers = np.reciprocal(factors)
 
         dist_str = format_values([s * 100 for s in dists[:]], lambda x: f"{x:2.0f}")
@@ -160,6 +154,24 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
         ],
         tablefmt="plain",
     )
+    return couples_report
+
+
+def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: CouplePairs, config: RunConfig) -> None:
+    """Compute and log statistics from the analysis results."""
+
+    user_id_list = [
+        (user_id, f"{users[user_id].response.first_name} {users[user_id].response.last_name}")
+        for user_id in users.keys()
+    ]
+
+    identity_values = np.array(
+        [[r.profile.identity for r in analysis_results[user_id].analysis_results] for user_id, _ in user_id_list]
+    )
+    assert identity_values.shape == (len(user_id_list), config.num_tests), f"{identity_values.shape}"
+
+    couples_report = analyze_inner(identity_values, user_id_list, couple_pairs, config.num_tests)
+
     couples_report_path = config.output_dir / "couples_report.txt"
     with couples_report_path.open("w", encoding="utf-8") as f:
         f.write(couples_report + "\n")
