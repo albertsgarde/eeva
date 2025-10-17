@@ -2,19 +2,20 @@ import asyncio
 
 from pydantic import BaseModel, Field, RootModel
 
-from ..models import Model, ResponseMetadata
-from .types import Profile, Response, User, UserId, UserSet
+from ..models import Model, UsageData
+from .types import Profile, User, UserId, UserSet
 
 
 class AnalysisResult(BaseModel):
     profile: Profile = Field()
     cot: str | None = Field()
-    response_metadata: ResponseMetadata = Field()
+    response_metadata: UsageData = Field()
 
 
 class AnalysisResultUser(BaseModel):
     first_name: str = Field()
     last_name: str = Field()
+    llm_input: str = Field()
     analysis_results: list[AnalysisResult] = Field()
 
 
@@ -49,7 +50,7 @@ class Analyzer(BaseModel):
     explicit_cot: bool = Field(default=False)
     llm: Model = Field()
 
-    async def analyze(self, response: Response) -> AnalysisResult:
+    async def analyze(self, content: str) -> AnalysisResult:
         class CotAnalyzerOutput(BaseModel):
             """ """
 
@@ -62,8 +63,6 @@ class Analyzer(BaseModel):
             identity: float = Field(ge=0, le=1, description=self.identity_prompt)
 
         output_type = CotAnalyzerOutput if self.explicit_cot else AnalyzerOutput
-
-        content = "\n".join(f"{question.question}: {question.response}" for question in response.responses.values())
 
         raw_output, usage_data = await self.llm.get_structured_output(content, output_type)
 
@@ -85,12 +84,14 @@ async def generate_user_profiles(
     analyzer: Analyzer, user_id: UserId, user: User, num_profiles: int
 ) -> tuple[UserId, AnalysisResultUser]:
     tasks = []
+    content = "\n".join(f"{question.question}: {question.response}" for question in user.response.responses.values())
     for _ in range(num_profiles):
-        tasks.append(asyncio.create_task(analyzer.analyze(user.response)))
+        tasks.append(asyncio.create_task(analyzer.analyze(content)))
     profiles = await asyncio.gather(*tasks)
     result_user = AnalysisResultUser(
         first_name=user.response.first_name,
         last_name=user.response.last_name,
+        llm_input=content,
         analysis_results=profiles,
     )
     return (user_id, result_user)

@@ -32,6 +32,9 @@ class ModelSpecifier(BaseModel):
     provider: str = Field()
 
     def init_chat_model(self, **kwargs) -> BaseChatModel:
+        if self.provider == "anthropic":
+            if "reasoning_effort" in kwargs:
+                del kwargs["reasoning_effort"]
         return chat_models.init_chat_model(self.name, model_provider=self.provider, **kwargs)
 
 
@@ -54,31 +57,42 @@ model_pricing: dict[ModelSpecifier, ModelPricingInfo] = {
 }
 
 
-class ResponseMetadata(BaseModel):
+class UsageData(BaseModel):
     input_tokens: int = Field(ge=0)
     cached_input_tokens: int = Field(ge=0, description="Number of input tokens served from cache")
     output_tokens: int = Field(ge=0)
     reasoning_tokens: int = Field(ge=0)
 
     @staticmethod
-    def from_raw(raw: dict[str, Any], model_specifier: ModelSpecifier) -> "ResponseMetadata":
+    def from_raw(raw: dict[str, Any], model_specifier: ModelSpecifier) -> "UsageData":
         if model_specifier.provider == "openai":
             input_tokens = raw["token_usage"]["prompt_tokens"]
             cached_input_tokens = raw["token_usage"]["prompt_tokens_details"]["cached_tokens"]
             output_tokens = raw["token_usage"]["completion_tokens"]
             reasoning_tokens = raw["token_usage"]["completion_tokens_details"]["reasoning_tokens"]
         elif model_specifier.provider == "anthropic":
-            input_tokens = raw["response_metadata"]["input_tokens"]
-            cached_input_tokens = (raw["response_metadata"]["cache_read_input_tokens"],)
-            output_tokens = (raw["response_metadata"]["output_tokens"],)
-            reasoning_tokens = (0,)
+            input_tokens = raw["usage"]["input_tokens"]
+            cached_input_tokens = raw["usage"]["cache_read_input_tokens"]
+            output_tokens = raw["usage"]["output_tokens"]
+            reasoning_tokens = 0
         else:
             raise ValueError(f"Unknown model provider: {model_specifier.provider}")
-        return ResponseMetadata(
+        return UsageData(
             input_tokens=input_tokens,
             cached_input_tokens=cached_input_tokens,
             output_tokens=output_tokens,
             reasoning_tokens=reasoning_tokens,
+        )
+
+    def calculate_cost(self, pricing_info: ModelPricingInfo) -> float:
+        return pricing_info.calculate(self.input_tokens, self.cached_input_tokens, self.output_tokens)
+
+    def combine(self, other: "UsageData") -> "UsageData":
+        return UsageData(
+            input_tokens=self.input_tokens + other.input_tokens,
+            cached_input_tokens=self.cached_input_tokens + other.cached_input_tokens,
+            output_tokens=self.output_tokens + other.output_tokens,
+            reasoning_tokens=self.reasoning_tokens + other.reasoning_tokens,
         )
 
 
@@ -94,12 +108,16 @@ class Model(BaseModel):
         llm = specifier.init_chat_model(**kwargs)
         return Model(specifier=specifier, llm=llm)
 
-    async def get_structured_output(
-        self, input: LanguageModelInput, output_type: Type[R]
-    ) -> tuple[R, ResponseMetadata]:
+    def pricing_info(self) -> ModelPricingInfo:
+        if self.specifier in model_pricing:
+            return model_pricing[self.specifier]
+        else:
+            raise ValueError(f"No pricing info for model specifier: {self.specifier}")
+
+    async def get_structured_output(self, input: LanguageModelInput, output_type: Type[R]) -> tuple[R, UsageData]:
         str_llm = self.llm.with_structured_output(output_type, include_raw=True)
         message = typing.cast(dict[str, Any], await str_llm.ainvoke(input))
         parsed: R = message["parsed"]
         raw_metadata = message["raw"].response_metadata
-        metadata = ResponseMetadata.from_raw(raw_metadata, self.specifier)
+        metadata = UsageData.from_raw(raw_metadata, self.specifier)
         return parsed, metadata
