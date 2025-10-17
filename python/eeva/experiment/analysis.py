@@ -1,5 +1,6 @@
 import asyncio
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, RootModel
 
 from ..models import Model, UsageData
@@ -47,7 +48,8 @@ class AnalysisResultSet(RootModel):
 class Analyzer(BaseModel):
     identity_prompt: str = Field()
     identity_extraction_prompt: str = Field()
-    explicit_cot: bool = Field(default=False)
+    explicit_cot: bool = Field()
+    system_prompt: str | None = Field()
     llm: Model = Field()
 
     async def analyze(self, content: str) -> AnalysisResult:
@@ -64,7 +66,15 @@ class Analyzer(BaseModel):
 
         output_type = CotAnalyzerOutput if self.explicit_cot else AnalyzerOutput
 
-        raw_output, usage_data = await self.llm.get_structured_output(content, output_type)
+        if self.system_prompt:
+            messages = [
+                SystemMessage(content=self.system_prompt),
+                HumanMessage(content=content),
+            ]
+        else:
+            messages = [HumanMessage(content=content)]
+
+        raw_output, usage_data = await self.llm.get_structured_output(messages, output_type)
 
         if isinstance(raw_output, dict):
             output = output_type(**raw_output)

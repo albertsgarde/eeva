@@ -192,6 +192,7 @@ def run(config: RunConfig) -> None:
         identity_prompt=config.identity_prompt,
         identity_extraction_prompt=config.identity_extraction_prompt,
         explicit_cot=config.explicit_cot,
+        system_prompt=config.system_prompt,
         llm=llm,
     )
 
