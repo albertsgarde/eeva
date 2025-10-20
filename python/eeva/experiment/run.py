@@ -196,11 +196,18 @@ def run(config: RunConfig) -> None:
         llm=llm,
     )
 
-    with (config.output_dir / "identity_prompt.txt").open("w", encoding="utf-8") as f:
+    prompt_output_dir = config.output_dir / "prompts"
+    prompt_output_dir.mkdir(exist_ok=True)
+
+    with (prompt_output_dir / "identity_prompt.txt").open("w", encoding="utf-8") as f:
         f.write(config.identity_prompt)
 
-    with (config.output_dir / "identity_extraction_prompt.txt").open("w", encoding="utf-8") as f:
+    with (prompt_output_dir / "identity_extraction_prompt.txt").open("w", encoding="utf-8") as f:
         f.write(config.identity_extraction_prompt)
+
+    with (prompt_output_dir / "system_prompt.txt").open("w", encoding="utf-8") as f:
+        if config.system_prompt:
+            f.write(config.system_prompt)
 
     logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time

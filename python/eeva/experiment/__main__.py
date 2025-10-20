@@ -14,6 +14,7 @@ from .run import RunConfig
 class Config:
     secrets_path: Path
     data_dir: Path
+    prompts_dir: Path
 
     model: str
     reasoning_effort: str
@@ -44,6 +45,7 @@ def main(cfg: Config) -> None:
     os.chdir(ROOT_PATH)
     [model, model_provider] = cfg.model.split(":")
     data_dir = Path(cfg.data_dir).resolve()
+    prompts_dir = (data_dir / cfg.prompts_dir).resolve()
     output_dir = Path(HydraConfig.get().runtime.output_dir).resolve()
     run.run(
         RunConfig(
@@ -53,16 +55,19 @@ def main(cfg: Config) -> None:
             model=model,
             model_provider=model_provider,
             reasoning_effort=cfg.reasoning_effort,
-            identity_prompt=(data_dir / cfg.identity_prompt_path)
+            identity_prompt=(prompts_dir / cfg.identity_prompt_path)
             .with_suffix(".txt")
             .resolve()
             .read_text(encoding="utf-8"),
-            identity_extraction_prompt=(data_dir / cfg.identity_extraction_prompt_path)
+            identity_extraction_prompt=(prompts_dir / cfg.identity_extraction_prompt_path)
             .with_suffix(".txt")
             .resolve()
             .read_text(encoding="utf-8"),
             explicit_cot=cfg.explicit_cot,
-            system_prompt=(data_dir / cfg.system_prompt_path).with_suffix(".txt").resolve().read_text(encoding="utf-8")
+            system_prompt=(prompts_dir / cfg.system_prompt_path)
+            .with_suffix(".txt")
+            .resolve()
+            .read_text(encoding="utf-8")
             if cfg.system_prompt_path
             else None,
             num_tests=cfg.num_tests,

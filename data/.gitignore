@@ -1,0 +1,8 @@
+**
+!.gitignore
+!question_sets/
+!question_sets/default_exclude.txt
+!user_sets/
+!user_sets/default_exclude.txt
+!prompts
+!prompts/default_system_message.txt
