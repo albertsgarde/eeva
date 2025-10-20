@@ -140,6 +140,15 @@ wheels = [
 ]
 
 [[package]]
+name = "beartype"
+version = "0.22.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/96/43ed27f27127155f24f5cf85df0c27fd2ac2ab67d94cecc8f76933f91679/beartype-0.22.2.tar.gz", hash = "sha256:ff3a7df26af8d15fa87f97934f0f6d41bbdadca971c410819104998dd26013d2", size = 1574491, upload-time = "2025-10-04T06:37:56.451Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/2a/a4773109619010192e72f48e95165b14790413a51f513c879c8d63f67e17/beartype-0.22.2-py3-none-any.whl", hash = "sha256:12077afe3528eba5c5b801f816712f7ff06f6da5509994c79561e29b48bcedb8", size = 1317280, upload-time = "2025-10-04T06:37:53.99Z" },
+]
+
+[[package]]
 name = "cachetools"
 version = "5.5.2"
 source = { registry = "https://pypi.org/simple" }
@@ -348,8 +357,10 @@ source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "anyio" },
+    { name = "beartype" },
     { name = "fastapi" },
     { name = "hydra-core" },
+    { name = "jaxtyping" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
     { name = "langchain-google-genai" },
@@ -385,8 +396,10 @@ dev = [
 requires-dist = [
     { name = "aiofiles", specifier = ">=24.1.0" },
     { name = "anyio", specifier = ">=4.9.0" },
+    { name = "beartype", specifier = ">=0.22.2" },
     { name = "fastapi", specifier = ">=0.115.12" },
     { name = "hydra-core", specifier = ">=1.3.2" },
+    { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "langchain", specifier = ">=0.3.24" },
     { name = "langchain-anthropic", specifier = ">=0.3.18" },
     { name = "langchain-google-genai", specifier = ">=2.1.12" },
@@ -918,6 +931,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ef/4c/5dd1d8af08107f88c7f741ead7a40854b8ac24ddf9ae850afbcf698aa552/ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81", size = 8393, upload-time = "2025-01-17T11:24:34.505Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/33/1f075bf72b0b747cb3288d011319aaf64083cf2efef8354174e3ed4540e2/ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c", size = 8074, upload-time = "2025-01-17T11:24:33.271Z" },
+]
+
+[[package]]
+name = "jaxtyping"
+version = "0.3.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wadler-lindig" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e4/1e/827f9e17b26e21c7d4d934fd1a214284ad05663afedd37c21ed105db366b/jaxtyping-0.3.3.tar.gz", hash = "sha256:8003cfd16ba2ad9b47fdda1d982a575299a81ddfc7997ad0e917c87a0897ea86", size = 45484, upload-time = "2025-10-01T13:46:51.933Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/97/88264b1af140f66ba7ca6eb2f3a108be233ee278bb3f1d5c750243e7458a/jaxtyping-0.3.3-py3-none-any.whl", hash = "sha256:a1c2f0f4351a8deda84b0e3b5c5a50894a1cdae2b82d841279fce4393aff4a7c", size = 55926, upload-time = "2025-10-01T13:46:50.621Z" },
 ]
 
 [[package]]
@@ -2488,6 +2513,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/19/f5b78616566ea68edd42aacaf645adbf71fbd83fc52281fba555dc27e3f1/uvloop-0.21.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3df876acd7ec037a3d005b3ab85a7e4110422e4d9c1571d4fc89b0fc41b6816", size = 4701068, upload-time = "2024-10-14T23:38:06.385Z" },
     { url = "https://files.pythonhosted.org/packages/47/57/66f061ee118f413cd22a656de622925097170b9380b30091b78ea0c6ea75/uvloop-0.21.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:bd53ecc9a0f3d87ab847503c2e1552b690362e005ab54e8a48ba97da3924c0dc", size = 4454428, upload-time = "2024-10-14T23:38:08.416Z" },
     { url = "https://files.pythonhosted.org/packages/63/9a/0962b05b308494e3202d3f794a6e85abe471fe3cafdbcf95c2e8c713aabd/uvloop-0.21.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a5c39f217ab3c663dc699c04cbd50c13813e31d917642d459fdcec07555cc553", size = 4660018, upload-time = "2024-10-14T23:38:10.888Z" },
+]
+
+[[package]]
+name = "wadler-lindig"
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/67/cbae4bf7683a64755c2c1778c418fea96d00e34395bb91743f08bd951571/wadler_lindig-0.1.7.tar.gz", hash = "sha256:81d14d3fe77d441acf3ebd7f4aefac20c74128bf460e84b512806dccf7b2cd55", size = 15842, upload-time = "2025-06-18T07:00:42.843Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/96/04e7b441807b26b794da5b11e59ed7f83b2cf8af202bd7eba8ad2fa6046e/wadler_lindig-0.1.7-py3-none-any.whl", hash = "sha256:e3ec83835570fd0a9509f969162aeb9c65618f998b1f42918cfc8d45122fe953", size = 20516, upload-time = "2025-06-18T07:00:41.684Z" },
 ]
 
 [[package]]

@@ -3,8 +3,11 @@ from typing import Callable
 
 import numpy as np
 import tabulate
+from beartype import beartype
+from jaxtyping import Float, UInt, jaxtyped
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
+from numpy import ndarray
 
 from .analysis import AnalysisResultSet
 from .types import CouplePairs, RunConfig, UserSet
@@ -33,9 +36,10 @@ def identity_histogram(analysis_results: AnalysisResultSet) -> Figure:
     return fig
 
 
+@jaxtyped(typechecker=beartype)
 def analyze_inner(
-    identity_values: np.ndarray,
-    couples_indices: np.ndarray,
+    identity_values: Float[ndarray, "num_users num_tests"],
+    couples_indices: UInt[ndarray, "num_couples 2"],
     couples_id_list: list[str],
 ) -> str:
     (num_users, num_tests) = identity_values.shape
@@ -168,7 +172,8 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
         [
             [user_id_to_index[couple_pairs[couple_id][0]], user_id_to_index[couple_pairs[couple_id][1]]]
             for couple_id in couple_id_list
-        ]
+        ],
+        dtype=np.uint32,
     )
 
     couples_report = analyze_inner(identity_values, couples_indices, couple_id_list)
