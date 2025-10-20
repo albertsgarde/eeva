@@ -193,6 +193,7 @@ def run(config: RunConfig) -> None:
         identity_extraction_prompt=config.identity_extraction_prompt,
         explicit_cot=config.explicit_cot,
         system_prompt=config.system_prompt,
+        user_prompt=config.user_prompt,
         llm=llm,
     )
 
@@ -208,6 +209,9 @@ def run(config: RunConfig) -> None:
     with (prompt_output_dir / "system_prompt.txt").open("w", encoding="utf-8") as f:
         if config.system_prompt:
             f.write(config.system_prompt)
+
+    with (prompt_output_dir / "user_prompt.txt").open("w", encoding="utf-8") as f:
+        f.write("")
 
     logging.info(f"Generating {config.num_tests} profiles per user for {len(users)} users...")
     # Synchronously get current time

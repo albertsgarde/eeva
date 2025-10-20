@@ -22,6 +22,7 @@ class Config:
     identity_extraction_prompt_path: str
     explicit_cot: bool
     system_prompt_path: str | None
+    user_prompt_path: str
 
     num_tests: int
 
@@ -70,6 +71,7 @@ def main(cfg: Config) -> None:
             .read_text(encoding="utf-8")
             if cfg.system_prompt_path
             else None,
+            user_prompt=(prompts_dir / cfg.user_prompt_path).with_suffix(".txt").resolve().read_text(encoding="utf-8"),
             num_tests=cfg.num_tests,
             question_exclusion_sets={set_name for set_name in cfg.question_exclusion_sets},
             question_inclusion_sets={set_name for set_name in cfg.question_inclusion_sets}

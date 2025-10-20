@@ -6,3 +6,4 @@
 !user_sets/default_exclude.txt
 !prompts
 !prompts/default_system_message.txt
+!prompts/default_user_message.txt
