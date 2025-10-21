@@ -125,6 +125,7 @@ def update_data(secrets_path: Path, output_path: Path):
         json.dump(
             base_data.model_dump(),
             f,
+            ensure_ascii=False,
             indent=2,
         )
 
