@@ -235,7 +235,7 @@ def run(config: RunConfig) -> None:
 
     analysis_dump_path = config.output_dir / "analysis.json"
     with analysis_dump_path.open("w", encoding="utf-8") as f:
-        json.dump(result.model_dump(), f, indent=2)
+        json.dump(result.model_dump(), f, indent=2, ensure_ascii=False)
     logging.info(f"Wrote analysis results to {analysis_dump_path}")
 
     fig = stats.identity_histogram(result)

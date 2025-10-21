@@ -166,7 +166,7 @@ async def log_err(identity_prompt: str, error: str) -> None:
         "identity_prompt": identity_prompt,
     }
     async with aiofiles.open(LOG_FILE, "a", encoding="utf-8") as f:
-        await f.write(f"{json.dumps(entry)}\n")
+        await f.write(f"{json.dumps(entry, ensure_ascii=False)}\n")
 
 
 @tool()

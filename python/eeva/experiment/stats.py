@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Callable
 
@@ -215,7 +216,7 @@ def analyze(analysis_results: AnalysisResultSet, users: UserSet, couple_pairs: C
 
     couples_report_json_path = config.output_dir / "couples_report.json"
     with couples_report_json_path.open("w", encoding="utf-8") as f:
-        f.write(couples_report.model_dump_json(indent=2))
+        json.dump(couples_report.model_dump(), f, indent=2, ensure_ascii=False)
     couples_report_path = config.output_dir / "couples_report.txt"
     with couples_report_path.open("w", encoding="utf-8") as f:
         f.write(report_text + "\n")
