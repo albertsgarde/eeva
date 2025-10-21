@@ -1,0 +1,4 @@
+# This is a default exclude set for questions.
+# A # marks the start of a comment, and the rest of the line is ignored.
+
+# Empty lines are permitted

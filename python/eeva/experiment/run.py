@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 
@@ -22,17 +23,23 @@ from .types import (
 )
 
 
+def load_set(path: Path) -> set[str]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    line_set = {line.split("#")[0].strip() for line in lines}
+    return {line for line in line_set if line}  # Exclude empty lines
+
+
 def filter_questions(questions: QuestionSet, config: RunConfig) -> QuestionSet:
     exclusion_set = set().union(
         *(
-            (config.data_dir / "question_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+            load_set(config.data_dir / "question_sets" / f"{set_name}.txt")
             for set_name in config.question_exclusion_sets
         )
     )
     inclusion_set = (
         set().union(
             *(
-                (config.data_dir / "question_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+                load_set(config.data_dir / "question_sets" / f"{set_name}.txt")
                 for set_name in config.question_inclusion_sets
             )
         )
@@ -67,13 +74,13 @@ def filter_users(
     exclusion_set: set[UserId] = {
         UserId(line.strip())
         for set_name in config.user_exclusion_sets
-        for line in (config.data_dir / "user_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+        for line in load_set(config.data_dir / "user_sets" / f"{set_name}.txt")
     }
     inclusion_set: set[UserId] | None = (
         {
             UserId(line.strip())
             for set_name in config.user_inclusion_sets
-            for line in (config.data_dir / "user_sets" / f"{set_name}.txt").read_text(encoding="utf-8").splitlines()
+            for line in load_set(config.data_dir / "user_sets" / f"{set_name}.txt")
         }
         if config.user_inclusion_sets
         else None
