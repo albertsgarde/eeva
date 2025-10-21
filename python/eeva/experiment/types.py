@@ -129,6 +129,7 @@ class RunConfig(BaseModel):
     identity_prompt: str = Field()
     identity_extraction_prompt: str = Field()
     explicit_cot: bool = Field()
+    two_step_analysis: bool = Field()
     system_prompt: str | None = Field()
     user_prompt: str = Field()
 

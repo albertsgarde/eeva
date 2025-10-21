@@ -1,1 +1,1 @@
-Please analyze the identity of this set of answers.
+Please analyze the identity of this set of answers. Give the entire set a score between 0 and 1.

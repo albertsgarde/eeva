@@ -121,3 +121,13 @@ class Model(BaseModel):
         raw_metadata = message["raw"].response_metadata
         metadata = UsageData.from_raw(raw_metadata, self.specifier)
         return parsed, metadata
+
+    async def get_unstructured_output(self, input: LanguageModelInput) -> tuple[str, UsageData]:
+        response = await self.llm.ainvoke(input)
+        if isinstance(response.content, str):
+            content = response.content
+        else:
+            raise ValueError(f"Unexpected response content type: {type(response.content)}. Expected str.")
+        raw_metadata = response.response_metadata
+        metadata = UsageData.from_raw(raw_metadata, self.specifier)
+        return content, metadata

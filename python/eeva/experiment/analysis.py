@@ -49,11 +49,18 @@ class Analyzer(BaseModel):
     identity_prompt: str = Field()
     identity_extraction_prompt: str = Field()
     explicit_cot: bool = Field()
+    two_step_analysis: bool = Field()
     system_prompt: str | None = Field()
     user_prompt: str = Field()
     llm: Model = Field()
 
     async def analyze(self, messages: list[BaseMessage]) -> AnalysisResult:
+        if self.two_step_analysis:
+            return await self._analyze_two_step(messages)
+        else:
+            return await self._analyze_single_step(messages)
+
+    async def _analyze_single_step(self, messages: list[BaseMessage]) -> AnalysisResult:
         class CotAnalyzerOutput(BaseModel):
             """ """
 
@@ -81,6 +88,31 @@ class Analyzer(BaseModel):
         cot = output.identity_cot if self.explicit_cot else None  # type: ignore
 
         return AnalysisResult(profile=profile, cot=cot, response_metadata=usage_data)
+
+    async def _analyze_two_step(self, messages: list[BaseMessage]) -> AnalysisResult:
+        # Step 1: Get free text response
+        free_text_response, step1_usage = await self.llm.get_unstructured_output(messages)
+
+        # Step 2: Extract structured data from the free text response
+        extraction_prompt = f"""Please extract the identity score from the following analysis.
+
+Analysis:
+{free_text_response}"""
+
+        class ExtractionOutput(BaseModel):
+            """ """
+
+            identity: float = Field(ge=0, le=1, description="Extracted identity score between 0 and 1.")
+
+        extraction_messages = [HumanMessage(content=extraction_prompt)]
+        extraction_output, step2_usage = await self.llm.get_structured_output(extraction_messages, ExtractionOutput)
+
+        # Combine usage data
+        combined_usage = step1_usage.combine(step2_usage)
+
+        profile = Profile(identity=extraction_output.identity)
+
+        return AnalysisResult(profile=profile, cot=free_text_response, response_metadata=combined_usage)
 
     async def generate_user_profiles(
         self, user_id: UserId, user: User, num_tests: int

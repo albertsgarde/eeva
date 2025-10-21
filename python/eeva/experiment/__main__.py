@@ -21,6 +21,7 @@ class Config:
     identity_prompt_path: str
     identity_extraction_prompt_path: str
     explicit_cot: bool
+    two_step_analysis: bool
     system_prompt_path: str | None
     user_prompt_path: str
 
@@ -65,6 +66,7 @@ def main(cfg: Config) -> None:
             .resolve()
             .read_text(encoding="utf-8"),
             explicit_cot=cfg.explicit_cot,
+            two_step_analysis=cfg.two_step_analysis,
             system_prompt=(prompts_dir / cfg.system_prompt_path)
             .with_suffix(".txt")
             .resolve()

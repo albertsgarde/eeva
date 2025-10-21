@@ -12,11 +12,12 @@ secrets_path: "secrets.json"
 
 model: "gpt-5-nano:openai"
 reasoning_effort: "minimal"
+system_prompt_path: "default_system_message"
+user_prompt_path: "default_user_message"
+two_step_analysis: false
 identity_prompt_path: "identity"
 identity_extraction_prompt_path: "identity_extraction"
 explicit_cot: true
-system_prompt_path: "default_system_message"
-user_prompt_path: "default_user_message"
 
 num_tests: 3
 
