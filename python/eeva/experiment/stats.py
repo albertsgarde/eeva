@@ -72,34 +72,45 @@ class CouplesReport(BaseModel):
         assert couples_indices.shape == (num_couples, 2), f"{couples_indices.shape}"
         assert np.all((0 <= couples_indices) & (couples_indices < num_users)), f"{couples_indices.shape}"
 
-        all_dists = np.abs(identity_values[:, None, :] - identity_values[None, :, :])
+        self_dist = -1
+        all_dists = (
+            np.abs(identity_values[:, None, :] - identity_values[None, :, :])
+            + np.eye(num_users)[:, :, None] * self_dist
+        )
         assert all_dists.shape == (num_users, num_users, num_tests + 2), f"{all_dists.shape}"
-        assert np.all((0 <= all_dists) & (all_dists <= 1)), f"{all_dists.shape}"
+        assert np.all(all_dists <= 1), f"{all_dists.shape}"
+        assert np.all(all_dists.diagonal(axis1=0, axis2=1) == self_dist), f"{all_dists.shape}"
+        assert np.all(all_dists == all_dists.transpose((1, 0, 2))), f"{all_dists.shape}"
 
         couple_dists = all_dists[couples_indices[:, 0], couples_indices[:, 1], :]
         assert couple_dists.shape == (num_couples, num_tests + 2), f"{couple_dists.shape}"
-        assert np.all((0 <= couple_dists) & (couple_dists <= 1)), f"{couple_dists.shape}"
+        assert np.all(couple_dists <= 1), f"{couple_dists.shape}"
 
         couple_all_dists = all_dists[couples_indices, :, :]
         assert couple_all_dists.shape == (num_couples, 2, num_users, num_tests + 2), f"{couple_all_dists.shape}"
 
-        better_than_couple_exc = couple_all_dists < couple_dists[:, None, None, :]
-        better_than_couple_inc = couple_all_dists <= couple_dists[:, None, None, :]
-        assert better_than_couple_exc.shape == couple_all_dists.shape, f"{better_than_couple_exc.shape}"
-        assert better_than_couple_inc.shape == couple_all_dists.shape, f"{better_than_couple_inc.shape}"
+        delta = 1e-6
 
-        user_steps_exc = better_than_couple_exc.sum(axis=2)
-        user_steps_inc = better_than_couple_inc.sum(axis=2)
-        assert user_steps_exc.shape == (num_couples, 2, num_tests + 2), f"{user_steps_exc.shape}"
-        assert user_steps_inc.shape == (num_couples, 2, num_tests + 2), f"{user_steps_inc.shape}"
-        assert np.all(user_steps_exc >= 0), f"{user_steps_exc.shape}"
-        assert np.all(user_steps_inc >= 2), f"{user_steps_inc.shape}"
+        # How many users are closer to the user than their partner? -1 to exclude the user themselves.
+        closer_than_couple = (couple_all_dists + delta) < couple_dists[:, None, None, :]
+        num_closer_than_couple = closer_than_couple.sum(axis=2) - 1
+        num_equal_to_couple = (((couple_all_dists - delta) < couple_dists[:, None, None, :]) & ~closer_than_couple).sum(
+            axis=2
+        )
+        assert num_closer_than_couple.shape == (num_couples, 2, num_tests + 2), f"{num_closer_than_couple.shape}"
+        assert num_equal_to_couple.shape == (num_couples, 2, num_tests + 2), f"{num_equal_to_couple.shape}"
+        assert np.all(num_closer_than_couple >= 0), f"{num_closer_than_couple.shape}"
+        assert np.all(num_equal_to_couple >= 1), f"{num_equal_to_couple.shape}"
 
-        user_steps = (user_steps_exc + user_steps_inc) / 2
+        user_steps = num_closer_than_couple + (num_equal_to_couple + 1) / 2
         assert user_steps.shape == (num_couples, 2, num_tests + 2), f"{user_steps.shape}"
         assert np.all(user_steps >= 1), f"{user_steps.shape}"
 
-        user_factors = user_steps / (float(num_users) / 2)
+        # Compute expected steps to find partner under a random search.
+        # There are num_users - 1 other users, and average rank is (n+1)/2, so we end up at simply num_users / 2.
+        expected_steps = (float(num_users)) / 2  # Average rank in uniform distribution
+
+        user_factors = user_steps / expected_steps
         assert user_factors.shape == (num_couples, 2, num_tests + 2), f"{user_factors.shape}"
         assert np.all(user_factors > 0), f"{user_factors.shape}"
 
